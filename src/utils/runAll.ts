@@ -1,5 +1,5 @@
 /**
- * Runs all functions in parallel
+ * Runs all functions
  */
 export const runAll = async (...fns: Function[]) => {
   for (const fn of fns) {

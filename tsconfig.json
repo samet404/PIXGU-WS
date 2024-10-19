@@ -17,6 +17,7 @@
       "@/sqlDb": ["src/db/sqlDb/index.ts"],
       "@/geoIP": ["src/db/geoIP/index.ts"],
       "@/db/*": ["src/db/*"],
+      "@/io*": ["src/io.ts"],
       "@/utils": ["src/utils/index.ts"],
       "@/types": ["src/types"],
       "@/sqlDb/*": ["src/db/sqlDb/*"],

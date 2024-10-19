@@ -1,6 +1,7 @@
-import { io } from '@/src'
+import { io } from '@/io'
 import { onConnection } from '@/helpers'
 import { emitIO, onIO } from '@/utils'
+import { z } from 'zod'
 
 export const test = () => {
   const testIO = io.of('/test')
@@ -10,7 +11,7 @@ export const test = () => {
 
     onIO.on(s, 'test', () => {
       console.log('received test')
-      emitIO.emit(s.to(s.id), 'test', 'hello world')
+      emitIO.output(z.any()).emit(s.to(s.id), 'test', 'hello world')
     })
   })
 }

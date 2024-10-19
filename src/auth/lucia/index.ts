@@ -29,3 +29,5 @@ declare module 'lucia' {
     DatabaseUserAttributes: Omit<DatabaseUser, 'id'>
   }
 }
+
+export * from './validate'

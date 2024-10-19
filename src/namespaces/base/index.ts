@@ -1,12 +1,6 @@
-import { io } from '@/src'
+import { io } from '@/io'
 import { onAuth } from '@/helpers'
 
 export const base = () => {
-  io.on('connection', (socket) =>
-    onAuth(
-      socket,
-      () => {},
-      () => {},
-    ),
-  )
+  io.on('connection', (s) => onAuth(s, {}))
 }

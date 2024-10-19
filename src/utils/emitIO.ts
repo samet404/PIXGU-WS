@@ -1,7 +1,7 @@
 import type { BroadcastOperator, Namespace, Server, Socket } from 'socket.io'
 import { z, ZodSchema } from 'zod'
-import type { LoggedSocket, NotLoggedSocket } from '../types'
 import { logErr } from '@/utils'
+import type { SocketAll } from '@/types'
 
 /**
  * emitIO is a utility to emit data to a socket.io client.
@@ -10,10 +10,11 @@ import { logErr } from '@/utils'
  *  emitIO.output(z.string())
  *  .emit(io, 'event', 'hello world')
  *
+ * Note: `Don't forget to initialize outputSchema`
  */
 export const emitIO: EmitIO = {
   data: {
-    outputSchema: z.any(),
+    outputSchema: null,
     onInvalidOutput: () => {},
   },
 
@@ -31,27 +32,26 @@ export const emitIO: EmitIO = {
 
   emit: function <T extends ZodSchema>(io: IO, ev: string, input: z.infer<T>) {
     try {
-      const validatedOutput = this.data.outputSchema.parse(input)
+      const validatedOutput = (() => {
+        if (!this.data.outputSchema) throw new Error('outputSchema is not set')
+        return this.data.outputSchema.parse(input)
+      })()
       // @ts-ignore
       io.emit(ev, validatedOutput)
     } catch (e) {
-      this.data.onInvalidOutput()
-      logErr(`invalid output recevied at ${ev}`, e as Error)
+      if (e instanceof Error) {
+        this.data.onInvalidOutput()
+        logErr(`invalid output recevied at ${ev} ${e.stack}`, e)
+      } else console.error(e)
     }
   },
 }
 
-type IO =
-  | Server
-  | Namespace
-  | Socket
-  | LoggedSocket
-  | NotLoggedSocket
-  | BroadcastOperator<any, any>
+type IO = Server | Namespace | SocketAll | BroadcastOperator<any, any>
 
 type EmitIO = {
   data: {
-    outputSchema: ZodSchema
+    outputSchema: ZodSchema | null
     onInvalidOutput: () => void
   }
   output: <T extends ZodSchema>(schema: T) => EmitIOWithSchema<T>

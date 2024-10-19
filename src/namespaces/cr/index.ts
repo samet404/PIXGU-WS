@@ -1,4 +1,4 @@
-import { io } from '@/src'
+import { io } from '@/io'
 import { onAuth, onConnection } from '@/helpers'
 import { onCreateRoom } from './onCreateRoom'
 
@@ -7,7 +7,8 @@ export const cr = () => {
 
   onConnection(crIO, (s) =>
     onAuth(s, {
-      both: (s) => onCreateRoom(s),
+      guest: (s) => onCreateRoom(s),
+      logged: (s) => onCreateRoom(s),
     }),
   )
 }
