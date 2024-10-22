@@ -80,7 +80,6 @@ export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
         const redisKeys = {
           name: `${room}:name`,
           admins: `${room}:admins`,
-          players: `${room}:players`,
           createdAt: `${room}:created_at`,
           hostID: `${room}:host_ID`,
           hostInRoom: `${room}:host_in_room`,
@@ -90,9 +89,11 @@ export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
           playersKnownPass: `${room}:players_known_pass`,
           createdRooms: `user:${userID}:created_rooms`,
           activePublicRooms: `active_public_rooms`,
+          activeRooms: `active_rooms`,
         }
 
         console.log(redisKeys)
+        await redisDb.sadd(redisKeys.activeRooms, roomID!)
         await redisDb.set(redisKeys.name, name)
         await redisDb.sadd(redisKeys.admins, userID)
         await redisDb.set(redisKeys.createdAt, createdAt.toISOString())
@@ -115,11 +116,9 @@ export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
 
         setRealTimeout(
           async () =>
-            emitIO
-              .output(z.any())
-              .emit(io.of('/player').to(roomID), 'room-killed', {
-                reason: 'TIME_IS_UP',
-              }),
+            emitIO.output(z.any()).emit(io.of('/p').to(roomID), 'room-killed', {
+              reason: 'TIME_IS_UP',
+            }),
           hToMS(24),
         )
 

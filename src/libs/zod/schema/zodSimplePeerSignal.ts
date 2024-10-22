@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-export const zodSimplePeerSignal = z
-  .object({
+export const zodSimplePeerSignal = z.union([
+  z.object({
     type: z.literal('transceiverRequest'),
     transceiverRequest: z.object({
       kind: z.string(),
@@ -23,26 +23,25 @@ export const zodSimplePeerSignal = z
         })
         .nullish(),
     }),
-  })
-  .or(
-    z.object({
-      type: z.literal('renegotiate'),
-      renegotiate: z.boolean(),
-    }),
-  )
-  .or(
-    z.object({
-      type: z.literal('candidate'),
-      candidate: z.any(),
-    }),
-  )
-  .or(
-    z.object({
-      sdp: z.string().optional(),
-      type: z
-        .literal('answer')
-        .or(z.literal('offer'))
-        .or(z.literal('pranswer'))
-        .or(z.literal('rollback')),
-    }),
-  )
+  }),
+
+  z.object({
+    type: z.literal('renegotiate'),
+    renegotiate: z.boolean(),
+  }),
+
+  z.object({
+    type: z.literal('candidate'),
+    candidate: z.any(),
+  }),
+
+  z.object({
+    sdp: z.string().optional(),
+    type: z.union([
+      z.literal('answer'),
+      z.literal('offer'),
+      z.literal('pranswer'),
+      z.literal('rollback'),
+    ]),
+  }),
+])

@@ -8,10 +8,9 @@ export const test = () => {
 
   onConnection(testIO, (s) => {
     console.log('connected to the test')
-
-    onIO.on(s, 'test', () => {
-      console.log('received test')
-      emitIO.output(z.any()).emit(s.to(s.id), 'test', 'hello world')
-    })
+    s.join('dsapdjasopdsajop')
+    emitIO
+      .output(z.any())
+      .emit(io.of('/test').to('dsapdjasopdsajop'), 'test', 'hello world')
   })
 }

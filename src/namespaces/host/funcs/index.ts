@@ -1,2 +1,1 @@
-export * from './authorizedHost'
-export * from './isHost'
+export * from './onHostAuth'

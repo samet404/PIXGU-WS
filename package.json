@@ -3,7 +3,8 @@
   "type": "module",
   "scripts": {
     "dev": "npx tsx watch --env-file=.env src/server.ts",
-    "prod": "npx tsx --env-file=.env src/server.ts"
+    "prod": "npx tsx --env-file=.env src/server.ts",
+    "redis:seed": "npx tsx --env-file=.env src/db/redis/seed/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"

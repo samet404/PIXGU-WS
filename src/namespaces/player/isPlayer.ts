@@ -21,21 +21,21 @@ export const isPlayer = async (
   const clientID = s.data.isLogged ? s.data.userID : s.data.guestID
   const clientInfo = s.data.isLogged ? s.data.user : s.data.guest
 
-  const isHostInRoom =
-    (await redisDb.get(`room:${roomID}:host_in_room`)) === '1'
+  // const isHostInRoom =
+  //   (await redisDb.get(`room:${roomID}:host_in_room`)) === '1'
 
-  if (!isHostInRoom) {
-    errLog(`Room ${roomID} is not active`)
-    emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
-      isSuccess: false,
-      reason: {
-        code: 'HOST_NOT_IN_ROOM',
-        message: 'Host is not in the room',
-      },
-    })
-    s.disconnect()
-    return
-  }
+  // if (!isHostInRoom) {
+  //   errLog(`Room ${roomID} is not active`)
+  //   emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
+  //     isSuccess: false,
+  //     reason: {
+  //       code: 'HOST_NOT_IN_ROOM',
+  //       message: 'Host is not in the room',
+  //     },
+  //   })
+  //   s.disconnect()
+  //   return
+  // }
 
   if (!roomID) {
     emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
@@ -63,35 +63,27 @@ export const isPlayer = async (
     return
   }
 
-  const isInRoom =
-    (await redisDb.sismember(`room:${roomID}:players`, clientID)) === 1
-  if (isInRoom) {
-    errLog(`User ${clientID} is already in room ${roomID}`)
-    emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
-      isSuccess: false,
-      reason: {
-        code: 'ALREADY_IN_ROOM',
-        message: 'You are already in the room',
-      },
-    })
-    s.disconnect()
-    return
-  }
+  // const isInRoom =
+  //   (await redisDb.sismember(`room:${roomID}:players`, clientID)) === 1
+  // if (isInRoom) {
+  //   errLog(`User ${clientID} is already in room ${roomID}`)
+  //   emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
+  //     isSuccess: false,
+  //     reason: {
+  //       code: 'ALREADY_IN_ROOM',
+  //       message: 'You are already in the room',
+  //     },
+  //   })
+  //   s.disconnect()
+  //   return
+  // }
 
-  s.on('disconnect', async () => {
-    await redisDb.srem(`room:${roomID}:players`, clientID)
-    await redisDb.decr(`room:${roomID}:total_connections`)
-    emitIO
-      .output(z.union([userSchema, guestSchema]))
-      .emit(io.of('/host').to(roomID), 'player-left', clientInfo)
-  })
+  console.log('roomID: ', roomID)
 
   await redisDb.incr(`room:${roomID}:total_connections`)
   await redisDb.sadd(`room:${roomID}:players`, clientID)
   s.join(roomID + clientID)
-  emitIO
-    .output(z.union([userSchema, guestSchema]))
-    .emit(io.of('/host').to(roomID), 'player-joined', clientInfo)
+  s.join(roomID)
   ;(s as LoggedPlayerSocket | GuestPlayerSocket).data.isPlayer = true
   ;(s as LoggedPlayerSocket | GuestPlayerSocket).data.roomID = roomID
 

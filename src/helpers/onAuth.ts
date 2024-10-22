@@ -1,5 +1,6 @@
 import type { Socket } from 'socket.io'
 import type {
+  AtLeastOne,
   GuestSocket,
   LoggedSocket,
   NotJoinedSocket,
@@ -10,6 +11,26 @@ import { validateUser } from '@/lucia'
 import { validateGuest } from '../auth/guest'
 import { z } from 'zod'
 
+/**
+ * Authenticates a socket
+ * @param s - socket
+ * @param cbs - callback functions
+ *
+ * `beforeRes: callback will be called before the user receives the response and vice versa`
+ *
+ * @example
+ * onAuth(s, {
+ *   logged: {
+ *     beforeRes: (s) => console.log('logged b'),
+ *     afterRes: (s) => console.log('logged a'),
+ *   },
+ *   guest: {
+ *     beforeRes: (s) => console.log('guest b'),
+ *     afterRes: (s) => console.log('guest a'),
+ *   },
+ *
+ * `In this example, if user is logged in, the "logged" callbacks will be called.`
+ */
 export const onAuth = (s: Socket, cbs: Cbs) => {
   const auth = async () => {
     console.log('Authenticating user...')
@@ -29,12 +50,14 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
         s.data.user = user
         s.data.session = session
         s.join(user.id)
-        cbs.logged(s)
-        cbs.default?.(s)
+        cbs.logged.beforeRes?.(s)
+        cbs.default?.beforeRes?.(s)
         emitIO.output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'logged',
         })
+        cbs.logged.afterRes?.(s)
+        cbs.default?.afterRes?.(s)
         return
       } else failed.push('logged')
     }
@@ -50,12 +73,14 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
         s.data.guestID = guest.ID
         s.data.guest = guest
         s.join(guest.ID)
-        cbs.guest(s)
-        cbs.default?.(s)
+        cbs.guest.beforeRes?.(s)
+        cbs.default?.beforeRes?.(s)
         emitIO.output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'guest',
         })
+        cbs.guest.afterRes?.(s)
+        cbs.default?.afterRes?.(s)
         return
       } else failed.push('guest')
     }
@@ -65,12 +90,14 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
       if (cbs.logged && !isLogged) {
         s.data.isLogged = false
         s.data.isGuest = true
-        cbs.notJoined(s)
-        cbs.default?.(s)
+        cbs.notJoined.beforeRes?.(s)
+        cbs.default?.beforeRes?.(s)
         emitIO.output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'notJoined',
         })
+        cbs.notJoined.afterRes?.(s)
+        cbs.default?.afterRes?.(s)
         return
       }
 
@@ -78,12 +105,14 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
       if (cbs.guest && !isGuest) {
         s.data.isLogged = false
         s.data.isGuest = true
-        cbs.notJoined(s)
-        cbs.default?.(s)
+        cbs.notJoined.beforeRes?.(s)
+        cbs.default?.beforeRes?.(s)
         emitIO.output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'notJoined',
         })
+        cbs.notJoined.afterRes?.(s)
+        cbs.default?.afterRes?.(s)
         return
       }
 
@@ -94,12 +123,14 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
       if (!user && !guest) {
         s.data.isLogged = false
         s.data.isGuest = true
-        cbs.notJoined(s)
-        cbs.default?.(s)
+        cbs.notJoined.beforeRes?.(s)
+        cbs.default?.beforeRes?.(s)
         emitIO.output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'notJoined',
         })
+        cbs.notJoined.afterRes?.(s)
+        cbs.default?.afterRes?.(s)
         return
       } else failed.push('notJoined')
     }
@@ -115,8 +146,22 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
 }
 
 type Cbs = {
-  logged?: (s: LoggedSocket) => void
-  notJoined?: (s: NotJoinedSocket) => void
-  guest?: (s: GuestSocket) => void
-  default?: (s: SocketAll) => void
+  logged?: AtLeastOne<{
+    beforeRes: (s: LoggedSocket) => void
+    afterRes: (s: LoggedSocket) => void
+  }>
+
+  notJoined?: AtLeastOne<{
+    beforeRes: (s: NotJoinedSocket) => void
+    afterRes: (s: NotJoinedSocket) => void
+  }>
+
+  guest?: AtLeastOne<{
+    beforeRes: (s: GuestSocket) => void
+    afterRes: (s: GuestSocket) => void
+  }>
+  default?: AtLeastOne<{
+    beforeRes: (s: SocketAll) => void
+    afterRes: (s: SocketAll) => void
+  }>
 }

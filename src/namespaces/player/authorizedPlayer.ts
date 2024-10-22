@@ -6,13 +6,17 @@ import { z } from 'zod'
 import { hostIO } from '../host'
 
 export const authorizedPlayer = (s: GuestSocket | LoggedSocket) =>
-  isPlayer(s, (s) =>
-    s.on('ready', () => {
-      console.log('player is ready')
-      const clientID = s.data.isLogged ? s.data.userID : s.data.guestID
-      const roomID = s.data.roomID
+  isPlayer(s, (s) => {
+    console.log('player is ready')
+    const clientID = s.data.isLogged ? s.data.userID : s.data.guestID
+    const roomID = s.data.roomID
 
-      onIO.input(zodSimplePeerSignal).on(s, 'send-webrtc-signal', (signal) => {
+    onIO
+      .input(
+        //zodSimplePeerSignal
+        z.any(),
+      )
+      .on(s, 'send-webrtc-signal', (signal) => {
         emitIO
           .output(
             z.object({
@@ -25,5 +29,4 @@ export const authorizedPlayer = (s: GuestSocket | LoggedSocket) =>
             signal,
           })
       })
-    }),
-  )
+  })

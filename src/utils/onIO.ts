@@ -3,7 +3,7 @@ import type { SocketAll } from '../types'
 import { logErr } from './logErr'
 
 /**
- * onIO is a utility to handle input from socket.io
+ * onIO is a utility to handle on input from socket.io
  *
  *  @example
  *  onIO.input(z.string()).on(io, 'connection', (input) => {

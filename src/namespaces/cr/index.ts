@@ -7,8 +7,12 @@ export const cr = () => {
 
   onConnection(crIO, (s) =>
     onAuth(s, {
-      guest: (s) => onCreateRoom(s),
-      logged: (s) => onCreateRoom(s),
+      guest: {
+        beforeRes: (s) => onCreateRoom(s),
+      },
+      logged: {
+        beforeRes: (s) => onCreateRoom(s),
+      },
     }),
   )
 }
