@@ -10,6 +10,7 @@ const server = createServer(app)
 
 const serverOptions: Partial<ServerOptions> = {
   /* options here */
+
   cors: {
     origin: env.ORIGINS.split(','),
     credentials: true,
