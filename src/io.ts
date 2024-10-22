@@ -1,12 +1,28 @@
 import chalk from 'chalk'
 import { env } from './env'
 import { Server, type ServerOptions } from 'socket.io'
-import { createServer } from 'node:http'
 import express from 'express'
 
 const port = parseInt(env.PORT)
 const app = express()
-const server = createServer(app)
+const server = await (async () => {
+  if (env.NODE_ENV === 'development') {
+    const createServer = (await import('node:http')).createServer
+
+    return createServer(app)
+  } else if (env.NODE_ENV === 'production') {
+    const { createServer } = await import('https')
+    const fs = await import('fs')
+
+    return createServer(
+      {
+        cert: fs.readFileSync('./ssl/cert.pem'),
+        key: fs.readFileSync('./ssl/key.pem'),
+      },
+      app,
+    )
+  }
+})()
 
 const serverOptions: Partial<ServerOptions> = {
   /* options here */
