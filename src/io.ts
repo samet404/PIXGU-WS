@@ -2,9 +2,15 @@ import chalk from 'chalk'
 import { env } from './env'
 import { Server, type ServerOptions } from 'socket.io'
 import express from 'express'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 
 const port = parseInt(env.PORT)
 const app = express()
+
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
+
 const server = await (async () => {
   if (env.NODE_ENV === 'development') {
     const createServer = (await import('node:http')).createServer
@@ -16,8 +22,8 @@ const server = await (async () => {
 
     return createServer(
       {
-        cert: fs.readFileSync('./ssl/cert.pem'),
-        key: fs.readFileSync('./ssl/key.pem'),
+        cert: fs.readFileSync(`${__dirname}/ssl/domain.cert.pem`),
+        key: fs.readFileSync(`${__dirname}/ssl/private.key.pem`),
       },
       app,
     )
