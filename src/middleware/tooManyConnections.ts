@@ -3,15 +3,17 @@ import type { Socket } from 'socket.io'
 import { env } from '@/env'
 
 export const tooManyConnections = async (socket: Socket) => {
-  if (env.NODE_ENV === 'development') return
 
-  const IP = socket.handshake.address
+  const IP = socket.handshake.headers['x-forwarded-for']
+  console.log('headers: ', JSON.stringify(socket.handshake.headers, null, 2))
+  console.log('IP: ', IP)
   if (!IP) {
     socket.disconnect()
     return
   }
 
   socket.data.IP = IP
+  if (env.NODE_ENV === 'development') return
   const connectionCount = parseInt(
     (await redisDb.get(`IP:${IP}:connection_count`)) || '0',
   )
