@@ -61,11 +61,9 @@ export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
           return
         }
 
-        const geoIP = await lookupCity(
-          env.NODE_ENV === 'development'
-            ? env.DEV_IP_ADDRESS
-            : s.handshake.address,
-        )
+        // @ts-ignore
+        const geoIP = await lookupCity(s.data.IP as string)
+
 
         if (!geoIP) {
           logErr('Geolocation information not found', new Error())

@@ -13,3 +13,5 @@ export const lookupCity = async (IP: string): Promise<MaxmindCity> => {
 
   return geoIP
 }
+
+console.log(await lookupCity('78.182.79.235'))
