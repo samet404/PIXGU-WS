@@ -13,7 +13,7 @@ export const createRoomID = async () => {
   let ID
   let isRoomExits = 0
 
-  while (isRoomExits !== 1 || retry < MAX_RETRY) {
+  while (isRoomExits !== 1 || retry > MAX_RETRY) {
     try {
       ID = createId()
       isRoomExits = await redisDb.sadd(`active_rooms`, ID)

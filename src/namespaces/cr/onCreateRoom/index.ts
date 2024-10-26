@@ -62,7 +62,7 @@ export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
         }
 
         // @ts-ignore
-        const geoIP = await lookupCity(s.data.IP as string)
+        const geoIP = await lookupCity(s.data.IP as string | undefined ?? env.DEV_IP_ADDRESS)
 
 
         if (!geoIP) {
