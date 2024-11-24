@@ -64,19 +64,18 @@ export const host = () => {
                     players.push(logged)
                   }
                 }
-                emitIO
+                emitIO()
                   .output(z.array(z.union([userSchema, guestSchema])))
                   .emit(io.of('/h').to(roomID), 'prev-players', players)
               })
 
-              onIO
-                .input(
-                  z.object({
-                    //zodSimplePeerSignal
-                    signal: z.any(),
-                    userID: z.string(),
-                  }),
-                )
+              onIO().input(
+                z.object({
+                  //zodSimplePeerSignal
+                  signal: z.any(),
+                  userID: z.string(),
+                }),
+              )
                 .on(s, 'send-webrtc-signal', async ({ signal, userID }) => {
                   console.log(
                     'recevied signal from host',
@@ -104,6 +103,12 @@ export const host = () => {
                   io.of('/p')
                     .to(roomID + userID)
                     .emit('receive-webrtc-signal', signal)
+
+                  s.on('block-user', async (userID) => {
+                    await redisDb.sadd(`room:${roomID}:blocked_users`, userID)
+                    io.of('/p').to(roomID + userID).emit('blocked')
+                    io.of('/p').to(roomID).disconnectSockets(userID)
+                  })
                 })
             },
           })
@@ -158,13 +163,13 @@ export const host = () => {
                       players.push(logged)
                     }
                   }
-                  emitIO
+                  emitIO()
                     .output(z.array(z.union([userSchema, guestSchema])))
                     .emit(io.of('/h').to(roomID), 'prev-players', players)
                 }, 2000)
               })
 
-              onIO
+              onIO()
                 .input(
                   z.object({
                     //zodSimplePeerSignal
@@ -200,6 +205,13 @@ export const host = () => {
                     .to(roomID + userID)
                     .emit('receive-webrtc-signal', signal)
                 })
+
+
+              s.on('block-user', async (userID) => {
+                await redisDb.sadd(`room:${roomID}:blocked_users`, userID)
+                io.of('/p').to(roomID).emit('blocked', userID)
+                io.of('/p').to(roomID + userID).disconnectSockets(userID)
+              })
             },
           })
         },

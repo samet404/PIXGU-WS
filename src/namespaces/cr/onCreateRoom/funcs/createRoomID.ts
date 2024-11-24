@@ -1,11 +1,11 @@
 import { redisDb } from '@/redis'
+import { ROOM_ID_LENGTH } from '@/constants'
 import { init } from '@paralleldrive/cuid2'
 
 const MAX_RETRY = 5
-const ID_LENGTH = 5
 
 const createId = init({
-  length: ID_LENGTH,
+  length: ROOM_ID_LENGTH,
 })
 
 export const createRoomID = async () => {

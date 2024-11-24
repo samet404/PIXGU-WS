@@ -7,15 +7,15 @@ import type { SocketAll } from '@/types'
  * emitIO is a utility to emit data to a socket.io client.
  *
  *  @example
- *  emitIO.output(z.string())
+ *  emitIO().output(z.string())
  *  .emit(io, 'event', 'hello world')
  *
  * Note: `Don't forget to initialize outputSchema`
  */
-export const emitIO: EmitIO = {
+export const emitIO: EmitIO = () => ({
   data: {
     outputSchema: null,
-    onInvalidOutput: () => {},
+    onInvalidOutput: () => { },
   },
 
   output: function <T extends ZodSchema>(schema: T) {
@@ -44,12 +44,12 @@ export const emitIO: EmitIO = {
         logErr(`invalid output recevied at ${ev} ${e.stack}`, e)
       } else console.error(e)
     }
-  },
-}
+  }
+})
 
 type IO = Server | Namespace | SocketAll | BroadcastOperator<any, any>
 
-type EmitIO = {
+type EmitIO = () => {
   data: {
     outputSchema: ZodSchema | null
     onInvalidOutput: () => void

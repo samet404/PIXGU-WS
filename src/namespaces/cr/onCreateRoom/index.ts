@@ -7,12 +7,14 @@ import { env } from '@/env'
 import { hToS } from '@/utils'
 import { io } from '@/io'
 import type { GuestSocket, LoggedSocket } from '@/types'
+import { REDIS_ROOM_KEYS_BY_ROOM_ID, REDIS_ROOM_KEYS_BY_USER_ID, REDIS_ROOM_OTHERS_KEYS } from '@/constants'
+import { killRoom } from '@/helpers'
 
 /**
  * Creates a room
  */
 export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
-  onIO
+  onIO()
     .input(
       z.object({
         name: z
@@ -74,53 +76,34 @@ export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
         const ll = [geoIP.location.latitude, geoIP.location.longitude]
         const country = geoIP.country.iso_code
 
-        const room = `room:${roomID}`
-        const redisKeys = {
-          name: `${room}:name`,
-          admins: `${room}:admins`,
-          createdAt: `${room}:created_at`,
-          hostID: `${room}:host_ID`,
-          hostInRoom: `${room}:host_in_room`,
-          hostCountry: `${room}:host_country`,
-          hostLL: `${room}:host_LL`,
-          password: `${room}:password`,
-          playersKnownPass: `${room}:players_known_pass`,
-          createdRooms: `user:${userID}:created_rooms`,
-          activePublicRooms: `active_public_rooms`,
-          activeRooms: `active_rooms`,
-        }
+        const redisKeysByRoomID = REDIS_ROOM_KEYS_BY_ROOM_ID(roomID)
+        const redisKeysByUserID = REDIS_ROOM_KEYS_BY_USER_ID(userID)
+        const redisKeysOther = REDIS_ROOM_OTHERS_KEYS
 
-        console.log(redisKeys)
-        await redisDb.sadd(redisKeys.activeRooms, roomID!)
-        await redisDb.set(redisKeys.name, name)
-        await redisDb.sadd(redisKeys.admins, userID)
-        await redisDb.set(redisKeys.createdAt, createdAt.toISOString())
-        await redisDb.set(redisKeys.hostID, userID)
-        await redisDb.set(redisKeys.hostInRoom, 0)
-        await redisDb.set(redisKeys.hostCountry, country)
-        await redisDb.set(redisKeys.hostLL, JSON.stringify(ll))
-        await redisDb.sadd(redisKeys.createdRooms, roomID!)
+        await redisDb.set(redisKeysByRoomID.totalPlayers, 0)
+        await redisDb.sadd(redisKeysOther.activeRooms, roomID!)
+        await redisDb.set(redisKeysByRoomID.name, name)
+        await redisDb.sadd(redisKeysByRoomID.admins, userID)
+        await redisDb.set(redisKeysByRoomID.createdAt, createdAt.toISOString())
+        await redisDb.set(redisKeysByRoomID.hostID, userID)
+        await redisDb.set(redisKeysByRoomID.hostInRoom, 0)
+        await redisDb.set(redisKeysByRoomID.hostCountry, country)
+        await redisDb.set(redisKeysByRoomID.hostLL, JSON.stringify(ll))
+        await redisDb.sadd(redisKeysByUserID.createdRooms, roomID!)
 
         if (password) {
-          await redisDb.set(redisKeys.password, password)
-          await redisDb.sadd(redisKeys.playersKnownPass, userID)
+          await redisDb.set(redisKeysByRoomID.password, password)
+          await redisDb.sadd(redisKeysByRoomID.playersKnownPass, userID)
         } else {
-          await redisDb.sadd(redisKeys.activePublicRooms, roomID!)
+          await redisDb.sadd(redisKeysOther.activePublicRooms, roomID!)
         }
 
-        Object.keys(redisKeys).forEach((key) => {
-          redisDb.expire(key, hToS(24))
-        })
-
-        setRealTimeout(
-          async () =>
-            emitIO.output(z.any()).emit(io.of('/p').to(roomID), 'room-killed', {
-              reason: 'TIME_IS_UP',
-            }),
+        setRealTimeout(() =>
+          killRoom(roomID, 'TIME_IS_UP'),
           hToMS(24),
         )
 
-        emitIO
+        emitIO()
           .output(z.any())
           .emit(io.of('/cr').to(userID), 'cr-success', roomID)
       } catch (error) {

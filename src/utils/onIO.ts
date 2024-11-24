@@ -6,12 +6,12 @@ import { logErr } from './logErr'
  * onIO is a utility to handle on input from socket.io
  *
  *  @example
- *  onIO.input(z.string()).on(io, 'connection', (input) => {
+ *  onIO().input(z.string()).on(io, 'connection', (input) => {
  *    console.log(input) // input is inferred as string
  *  })
  *
  */
-export const onIO: onIO = {
+export const onIO: onIO = () => ({
   data: {
     schema: z.any(),
   },
@@ -36,11 +36,11 @@ export const onIO: onIO = {
       }
     })
   },
-}
+})
 
 type IO = SocketAll
 
-type onIO = {
+type onIO = () => {
   data: {
     schema: ZodSchema
   }

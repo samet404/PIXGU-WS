@@ -23,7 +23,8 @@
       "@/sqlDb/*": ["src/db/sqlDb/*"],
       "@/schema/*": ["src/db/sqlDb/schema/*"],
       "@/middleware": ["src/middleware/index.ts"],
-      "@/redis": ["src/db/redis/index.ts"]
+      "@/redis": ["src/db/redis/index.ts"],
+      "@/constants": ["src/constants/index.ts"]
     },
     // Bundler mode
     "moduleResolution": "bundler",

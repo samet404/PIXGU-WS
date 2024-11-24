@@ -35,7 +35,7 @@ export const onHostAuth = async <T extends SocketAll>(
     const isRoomActiveInRedis = await redisDb.sismember('active_rooms', roomID)
     if (isRoomActiveInRedis === 0) {
       logErr(`Room ${roomID} is not active`, new Error())
-      emitIO.output(hostAuthSchema).emit(s, 'host-auth', {
+      emitIO().output(hostAuthSchema).emit(s, 'host-auth', {
         isSuccess: false,
         reason: 'UNAUTHORIZED: ROOM_NOT_ACTIVE',
       })
@@ -49,7 +49,7 @@ export const onHostAuth = async <T extends SocketAll>(
     console.log(JSON.stringify({ userID, hostID }, null, 2))
     if (userID !== hostID) {
       logErr(`User ${userID} is not the host of room ${roomID}`, new Error())
-      emitIO.output(hostAuthSchema).emit(s, 'host-auth', {
+      emitIO().output(hostAuthSchema).emit(s, 'host-auth', {
         isSuccess: false,
         reason: 'UNAUTHORIZED: USER_NOT_HOST',
       })
@@ -63,7 +63,7 @@ export const onHostAuth = async <T extends SocketAll>(
     const isInRoom = await redisDb.get(`room:${roomID}:host_in_room`)
     console.log('isInRoom ', isInRoom)
     if (isInRoom === '1') {
-      emitIO.output(hostAuthSchema).emit(s, 'host-auth', {
+      emitIO().output(hostAuthSchema).emit(s, 'host-auth', {
         isSuccess: false,
         reason: 'UNAUTHORIZED: ALREADY_IN_ROOM',
       })
@@ -79,12 +79,12 @@ export const onHostAuth = async <T extends SocketAll>(
       await redisDb.decr(`room:${roomID}:total_connections`)
       io.of('/p').to(roomID).emit('host-left')
     })
-    ;(s as HostSocket).data.roomID = roomID
+      ; (s as HostSocket).data.roomID = roomID
     console.log('roomID: ', roomID)
     s.join(roomID)
     await redisDb.set(`room:${roomID}:host_in_room`, '1')
     cbs?.beforeRes?.(s as ResultS<T>)
-    emitIO.output(hostAuthSchema).emit(s, 'host-auth', {
+    emitIO().output(hostAuthSchema).emit(s, 'host-auth', {
       isSuccess: true,
     })
     cbs?.afterRes?.(s as ResultS<T>)

@@ -9,4 +9,4 @@ const errSchema = z.union([
 ])
 
 export const emitErr = (s: SocketAll, err: z.infer<typeof errSchema>) =>
-  emitIO.output(errSchema).emit(s, 'cr-error', err)
+  emitIO().output(errSchema).emit(s, 'cr-error', err)

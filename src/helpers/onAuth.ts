@@ -52,7 +52,7 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
         s.join(user.id)
         cbs.logged.beforeRes?.(s)
         cbs.default?.beforeRes?.(s)
-        emitIO.output(z.any()).emit(s, 'auth', {
+        emitIO().output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'logged',
         })
@@ -75,7 +75,7 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
         s.join(guest.ID)
         cbs.guest.beforeRes?.(s)
         cbs.default?.beforeRes?.(s)
-        emitIO.output(z.any()).emit(s, 'auth', {
+        emitIO().output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'guest',
         })
@@ -92,7 +92,7 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
         s.data.isGuest = true
         cbs.notJoined.beforeRes?.(s)
         cbs.default?.beforeRes?.(s)
-        emitIO.output(z.any()).emit(s, 'auth', {
+        emitIO().output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'notJoined',
         })
@@ -107,7 +107,7 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
         s.data.isGuest = true
         cbs.notJoined.beforeRes?.(s)
         cbs.default?.beforeRes?.(s)
-        emitIO.output(z.any()).emit(s, 'auth', {
+        emitIO().output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'notJoined',
         })
@@ -125,7 +125,7 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
         s.data.isGuest = true
         cbs.notJoined.beforeRes?.(s)
         cbs.default?.beforeRes?.(s)
-        emitIO.output(z.any()).emit(s, 'auth', {
+        emitIO().output(z.any()).emit(s, 'auth', {
           isSuccess: true,
           as: 'notJoined',
         })
@@ -135,7 +135,7 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
       } else failed.push('notJoined')
     }
 
-    emitIO.output(z.any()).emit(s, 'auth', {
+    emitIO().output(z.any()).emit(s, 'auth', {
       isSuccess: false,
       required: failed,
     })

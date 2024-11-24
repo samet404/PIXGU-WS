@@ -1,9 +1,7 @@
 import { redisDb } from '@/redis'
-import { io } from '@/io'
 import { getRoomID } from '@/helpers'
 import chalk from 'chalk'
 import { emitIO } from '@/src/utils'
-import { guestSchema, userSchema } from '@/zod/schema'
 import type {
   GuestPlayerSocket,
   GuestSocket,
@@ -11,6 +9,8 @@ import type {
   LoggedSocket,
 } from '@/types'
 import { z } from 'zod'
+import { env } from '@/src/env'
+import { MAX_PLAYERS_PER_ROOM } from '@/constants'
 
 export const isPlayer = async (
   s: LoggedSocket | GuestSocket,
@@ -19,26 +19,69 @@ export const isPlayer = async (
   const errLog = (a: any) => console.log(chalk.redBright(a))
   const roomID = getRoomID(s)
   const clientID = s.data.isLogged ? s.data.userID : s.data.guestID
-  const clientInfo = s.data.isLogged ? s.data.user : s.data.guest
 
-  // const isHostInRoom =
-  //   (await redisDb.get(`room:${roomID}:host_in_room`)) === '1'
+  const isRoomHavePass = await redisDb.exists(`room:${roomID}:password`)
+  if (isRoomHavePass) {
+    const isRoomPasswordCorrect = await redisDb.get(`room:${roomID}:password`) === s.handshake.auth.password
+    if (!isRoomPasswordCorrect) {
+      errLog(`Room password is incorrect ${roomID}`)
+      emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
+        isSuccess: false,
+        reason: {
+          code: 'INCORRECT_PASSWORD',
+          message: 'Incorrect password',
+        },
+      })
+      s.disconnect()
+      return
+    }
+  }
 
-  // if (!isHostInRoom) {
-  //   errLog(`Room ${roomID} is not active`)
-  //   emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
-  //     isSuccess: false,
-  //     reason: {
-  //       code: 'HOST_NOT_IN_ROOM',
-  //       message: 'Host is not in the room',
-  //     },
-  //   })
-  //   s.disconnect()
-  //   return
-  // }
+  const isHostInRoom = env.NODE_ENV === 'development' ? true : (await redisDb.get(`room:${roomID}:host_in_room`)) === '1'
+
+  const totalPlayers = env.NODE_ENV === 'development' ? 0 : await redisDb.incr(`room:${roomID}:total_players`)
+  if (totalPlayers >= MAX_PLAYERS_PER_ROOM) {
+    errLog(`Room full ${roomID}`)
+    emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
+      isSuccess: false,
+      reason: {
+        code: 'ROOM_FULL',
+        message: 'Room is full',
+      },
+    })
+    s.disconnect()
+    return
+  }
+
+  const blocked = (await redisDb.sismember(`room:${roomID}:blocked_users`, clientID)) === 1
+  if (blocked) {
+    errLog(`User ${clientID} is blocked in room ${roomID}`)
+    emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
+      isSuccess: false,
+      reason: {
+        code: 'USER_BLOCKED',
+        message: 'You are blocked in the room',
+      },
+    })
+    s.disconnect()
+    return
+  }
+
+  if (!isHostInRoom) {
+    errLog(`Host not in room ${roomID}`)
+    emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
+      isSuccess: false,
+      reason: {
+        code: 'HOST_NOT_IN_ROOM',
+        message: 'Host is not in the room',
+      },
+    })
+    s.disconnect()
+    return
+  }
 
   if (!roomID) {
-    emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
+    emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
       isSuccess: false,
       reason: {
         code: 'ROOM_NOT_FOUND',
@@ -52,7 +95,7 @@ export const isPlayer = async (
   const isRoomActiveInRedis =
     (await redisDb.sismember('active_rooms', roomID)) === 0
   if (isRoomActiveInRedis) {
-    emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
+    emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
       isSuccess: false,
       reason: {
         code: 'ROOM_NOT_ACTIVE',
@@ -63,31 +106,31 @@ export const isPlayer = async (
     return
   }
 
-  // const isInRoom =
-  //   (await redisDb.sismember(`room:${roomID}:players`, clientID)) === 1
-  // if (isInRoom) {
-  //   errLog(`User ${clientID} is already in room ${roomID}`)
-  //   emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
-  //     isSuccess: false,
-  //     reason: {
-  //       code: 'ALREADY_IN_ROOM',
-  //       message: 'You are already in the room',
-  //     },
-  //   })
-  //   s.disconnect()
-  //   return
-  // }
+  const isInRoom = env.NODE_ENV === 'development' ? false : (await redisDb.sismember(`room:${roomID}:players`, clientID)) === 1
+  if (isInRoom) {
+    errLog(`User ${clientID} is already in room ${roomID}`)
+    emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
+      isSuccess: false,
+      reason: {
+        code: 'ALREADY_IN_ROOM',
+        message: 'You are already in the room',
+      },
+    })
+    s.disconnect()
+    return
+  }
 
-  console.log('roomID: ', roomID)
-
-  await redisDb.incr(`room:${roomID}:total_connections`)
+  if (env.NODE_ENV === 'production') {
+    await redisDb.incr(`room:${roomID}:total_players`)
+    await redisDb.incr(`room:${roomID}:total_connections`)
+  }
   await redisDb.sadd(`room:${roomID}:players`, clientID)
   s.join(roomID + clientID)
   s.join(roomID)
-  ;(s as LoggedPlayerSocket | GuestPlayerSocket).data.isPlayer = true
-  ;(s as LoggedPlayerSocket | GuestPlayerSocket).data.roomID = roomID
+    ; (s as LoggedPlayerSocket | GuestPlayerSocket).data.isPlayer = true
+    ; (s as LoggedPlayerSocket | GuestPlayerSocket).data.roomID = roomID
 
-  emitIO.output(playerAuthSchema).emit(s, 'player-auth', {
+  emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
     isSuccess: true,
   })
   cb(s as LoggedPlayerSocket | GuestPlayerSocket)

@@ -11,13 +11,13 @@ export const authorizedPlayer = (s: GuestSocket | LoggedSocket) =>
     const clientID = s.data.isLogged ? s.data.userID : s.data.guestID
     const roomID = s.data.roomID
 
-    onIO
+    onIO()
       .input(
         //zodSimplePeerSignal
         z.any(),
       )
       .on(s, 'send-webrtc-signal', (signal) => {
-        emitIO
+        emitIO()
           .output(
             z.object({
               userID: zClientID,
