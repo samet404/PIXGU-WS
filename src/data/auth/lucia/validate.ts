@@ -7,6 +7,7 @@ export const validateUser = async (
   socket: SocketAll,
 ): Promise<{ user: User; session: Session } | null> => {
   const cookies = getCookies(socket)
+  if (!cookies) return null
 
   const sessionId = cookies['auth_session']
   if (!sessionId) return null

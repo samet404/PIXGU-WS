@@ -6,7 +6,10 @@ import { z } from 'zod'
 
 export const validateGuest = async (s: SocketAll) => {
   try {
-    const authSession = getCookies(s)['guest_auth_session']
+    const cookies = getCookies(s)
+    if (!cookies) return
+
+    const authSession = cookies['guest_auth_session']
     z.string().min(10).cuid2().parse(authSession)
 
     if (!authSession) return null
@@ -34,5 +37,5 @@ export const validateGuest = async (s: SocketAll) => {
     }
 
     return guest
-  } catch (error) {}
+  } catch (error) { }
 }

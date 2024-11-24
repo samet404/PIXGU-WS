@@ -4,7 +4,10 @@ import type { SocketAll } from '@/types'
 import { z } from 'zod'
 
 export const killGuest = async (s: SocketAll) => {
-  const authSession = getCookies(s)['guest_auth_session']
+  const cookies = getCookies(s)
+  if (!cookies) return
+
+  const authSession = cookies['guest_auth_session']
   if (authSession) {
     try {
       z.string().min(10).cuid2().parse(authSession)
