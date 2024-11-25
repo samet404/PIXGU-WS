@@ -69,6 +69,27 @@ export const host = () => {
                   .emit(io.of('/h').to(roomID), 'prev-players', players)
               })
 
+              onIO().input(z.string().cuid2()).on(s, 'connection-failed', async (userID) => {
+                io.of('/p').to(roomID + userID).disconnectSockets()
+              })
+
+              onIO().input(z.string().cuid2()).on(s, 'connection-success', async (userID) => {
+                console.log('connection-success', userID)
+                try {
+                  await redisDb.incr(`room:${roomID}:total_players`)
+                  await redisDb.incr(`room:${roomID}:total_connections`)
+                  await redisDb.sadd(`room:${roomID}:players`, userID)
+                } catch (error) {
+                  console.error('error when connection-success', error)
+                }
+              })
+
+              s.on('block-user', async (userID) => {
+                await redisDb.sadd(`room:${roomID}:blocked_users`, userID)
+                io.of('/p').to(roomID + userID).emit('blocked')
+                io.of('/p').to(roomID + userID).disconnectSockets()
+              })
+
               onIO().input(
                 z.object({
                   //zodSimplePeerSignal
@@ -88,28 +109,14 @@ export const host = () => {
                       2,
                     ),
                   )
-                  const isUserInRoom =
-                    (await redisDb.sismember(
-                      `room:${roomID}:players`,
-                      userID,
-                    )) === 1
-
-                  if (!isUserInRoom) {
-                    s.emit('send-webrtc-signal-error', 'USER_NOT_FOUND')
-                    return
-                  }
 
                   console.log('signal: ', signal)
                   io.of('/p')
                     .to(roomID + userID)
                     .emit('receive-webrtc-signal', signal)
-
-                  s.on('block-user', async (userID) => {
-                    await redisDb.sadd(`room:${roomID}:blocked_users`, userID)
-                    io.of('/p').to(roomID + userID).emit('blocked')
-                    io.of('/p').to(roomID).disconnectSockets(userID)
-                  })
                 })
+
+
             },
           })
         },
@@ -189,16 +196,7 @@ export const host = () => {
                       2,
                     ),
                   )
-                  const isUserInRoom =
-                    (await redisDb.sismember(
-                      `room:${roomID}:players`,
-                      userID,
-                    )) === 1
 
-                  if (!isUserInRoom) {
-                    s.emit('send-webrtc-signal-error', 'USER_NOT_FOUND')
-                    return
-                  }
 
                   console.log('signal: ', signal)
                   io.of('/p')

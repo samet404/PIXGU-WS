@@ -120,11 +120,7 @@ export const isPlayer = async (
     return
   }
 
-  if (env.NODE_ENV === 'production') {
-    await redisDb.incr(`room:${roomID}:total_players`)
-    await redisDb.incr(`room:${roomID}:total_connections`)
-  }
-  await redisDb.sadd(`room:${roomID}:players`, clientID)
+
   s.join(roomID + clientID)
   s.join(roomID)
     ; (s as LoggedPlayerSocket | GuestPlayerSocket).data.isPlayer = true

@@ -98,6 +98,11 @@ export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
           await redisDb.sadd(redisKeysOther.activePublicRooms, roomID!)
         }
 
+        for (const key of Object.keys(redisKeysByRoomID)) {
+          await redisDb.expire(key, hToMS(24))
+        }
+
+
         setRealTimeout(() =>
           killRoom(roomID, 'TIME_IS_UP'),
           hToMS(24),

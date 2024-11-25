@@ -5,7 +5,6 @@ import { emitIO, onIO } from '@/src/utils'
 import { z } from 'zod'
 import { guestSchema, userSchema } from '@/zod/schema'
 import { redisDb } from '@/src/db/redis'
-import { env } from '@/src/env'
 
 export const playerIO = io.of(`/p`)
 
@@ -16,12 +15,14 @@ export const player = () => {
         beforeRes: (s) => authorizedPlayer(s),
         afterRes: (s) =>
           s.once('ready', () => {
+            // @ts-expect-error
             const roomID = s.data.roomID
             const clientID = s.data.guestID
             console.log('clientID: ', clientID)
             s.on('disconnect', async () => {
+              const isConnectedToHost = await redisDb.sismember(`room:${roomID}:players`, clientID)
               await redisDb.srem(`room:${roomID}:players`, clientID)
-              if (env.NODE_ENV === 'production') {
+              if (isConnectedToHost) {
                 await redisDb.decr(`room:${roomID}:total_connections`)
                 await redisDb.decr(`room:${roomID}:total_players`)
               }
@@ -44,12 +45,14 @@ export const player = () => {
         beforeRes: (s) => authorizedPlayer(s),
         afterRes: (s) =>
           s.once('ready', () => {
+            // @ts-expect-error
             const roomID = s.data.roomID
             const clientID = s.data.userID
             console.log('clientID: ', clientID)
             s.on('disconnect', async () => {
+              const isConnectedToHost = await redisDb.sismember(`room:${roomID}:players`, clientID)
               await redisDb.srem(`room:${roomID}:players`, clientID)
-              if (env.NODE_ENV === 'production') {
+              if (isConnectedToHost) {
                 await redisDb.decr(`room:${roomID}:total_connections`)
                 await redisDb.decr(`room:${roomID}:total_players`)
               }
