@@ -4,7 +4,7 @@
   "packageManager": "bun@1.1.7",
   "scripts": {
     "dev": "npx tsx watch --env-file=.env src/server.ts",
-    "prod": "npx tsx --env-file=.env src/server.ts",
+    "prod": "bun run src/db/redis/seed/index.ts && npx tsx --env-file=.env src/server.ts ",
     "redis:seed": "npx tsx --env-file=.env src/db/redis/seed/index.ts"
   },
   "devDependencies": {

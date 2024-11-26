@@ -20,7 +20,7 @@ export const killGuest = async (s: SocketAll) => {
       await redisDb.del(`guest:${guestID}:name`)
       await redisDb.del(`guest:${guestID}:name_ID`)
       await redisDb.del(`guest:${guestID}:name_&_name_ID`)
-
+      await redisDb.del(`user:${userID}:settings:developer_mode`)
       const redisKeysByUserID = REDIS_ROOM_KEYS_BY_USER_ID(userID)
 
       const createdRooms = await redisDb.smembers(redisKeysByUserID.createdRooms)
