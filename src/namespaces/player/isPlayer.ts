@@ -1,16 +1,16 @@
-import { redisDb } from '@/redis'
+import { MAX_PLAYERS_PER_ROOM } from '@/constants'
 import { getRoomID } from '@/helpers'
-import chalk from 'chalk'
 import { emitIO } from '@/src/utils'
+import { redisDb } from '@/redis'
+import { env } from '@/src/env'
+import chalk from 'chalk'
+import { z } from 'zod'
 import type {
   GuestPlayerSocket,
   GuestSocket,
   LoggedPlayerSocket,
   LoggedSocket,
 } from '@/types'
-import { z } from 'zod'
-import { env } from '@/src/env'
-import { MAX_PLAYERS_PER_ROOM } from '@/constants'
 
 export const isPlayer = async (
   s: LoggedSocket | GuestSocket,
@@ -19,6 +19,20 @@ export const isPlayer = async (
   const errLog = (a: any) => console.log(chalk.redBright(a))
   const roomID = getRoomID(s)
   const clientID = s.data.isLogged ? s.data.userID : s.data.guestID
+
+  const isGameAlreadyStarted = (await redisDb.get(`room:${roomID}:game_started`)) === '1'
+  if (isGameAlreadyStarted) {
+    errLog(`Game already started ${roomID}`)
+    emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
+      isSuccess: false,
+      reason: {
+        code: 'GAME_ALREADY_STARTED',
+        message: 'Game already started',
+      },
+    })
+    s.disconnect()
+    return
+  }
 
   const isRoomHavePass = await redisDb.exists(`room:${roomID}:password`)
   if (isRoomHavePass) {

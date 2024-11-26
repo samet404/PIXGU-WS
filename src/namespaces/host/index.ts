@@ -69,6 +69,26 @@ export const host = () => {
                   .emit(io.of('/h').to(roomID), 'prev-players', players)
               })
 
+              onIO().input(z.string().cuid2()).on(s, 'not-allowed', async (userID) => {
+                io.of('/p').to(roomID + userID).disconnectSockets()
+              })
+
+              onIO().input(z.boolean()).on(s, 'game-started', async (isMatchStarted) => {
+                const hasPass = await redisDb.get(`room:${roomID}:password`)
+
+
+                if (isMatchStarted) {
+                  await redisDb.set(`room:${roomID}:game_started`, 1)
+                  if (!hasPass) await redisDb.srem('active_public_rooms', roomID)
+                }
+
+                if (!isMatchStarted) {
+                  await redisDb.set(`room:${roomID}:game_started`, 0)
+                  if (!hasPass) await redisDb.sadd('active_public_rooms', roomID)
+                }
+
+              })
+
               onIO().input(z.string().cuid2()).on(s, 'connection-failed', async (userID) => {
                 io.of('/p').to(roomID + userID).disconnectSockets()
               })
@@ -178,6 +198,26 @@ export const host = () => {
 
               onIO().input(z.string().cuid2()).on(s, 'connection-failed', async (userID) => {
                 io.of('/p').to(roomID + userID).disconnectSockets()
+              })
+
+              onIO().input(z.string().cuid2()).on(s, 'not-allowed', async (userID) => {
+                io.of('/p').to(roomID + userID).disconnectSockets()
+              })
+
+              onIO().input(z.boolean()).on(s, 'game-started', async (isMatchStarted) => {
+                const hasPass = await redisDb.get(`room:${roomID}:password`)
+
+
+                if (isMatchStarted) {
+                  await redisDb.set(`room:${roomID}:game_started`, 1)
+                  if (!hasPass) await redisDb.srem('active_public_rooms', roomID)
+                }
+
+                if (!isMatchStarted) {
+                  await redisDb.set(`room:${roomID}:game_started`, 0)
+                  if (!hasPass) await redisDb.sadd('active_public_rooms', roomID)
+                }
+
               })
 
               onIO().input(z.string().cuid2()).on(s, 'connection-success', async (userID) => {

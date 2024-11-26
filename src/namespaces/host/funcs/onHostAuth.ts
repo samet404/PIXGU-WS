@@ -31,6 +31,7 @@ export const onHostAuth = async <T extends SocketAll>(
   s.once('host-auth', async () => {
     let isDisconnected = false
     const roomID = getRoomID(s)
+    const hasPass = await redisDb.get(`room:${roomID}:password`)
 
     const isRoomActiveInRedis = await redisDb.sismember('active_rooms', roomID)
     if (isRoomActiveInRedis === 0) {
@@ -77,6 +78,7 @@ export const onHostAuth = async <T extends SocketAll>(
     s.on('disconnect', async () => {
       const isInRoom = await redisDb.get(`room:${roomID}:host_in_room`)
       if (isInRoom === '1') {
+        if (!hasPass) await redisDb.srem('active_public_rooms', roomID)
         await redisDb.set(`room:${roomID}:host_in_room`, '0')
         await redisDb.decr(`room:${roomID}:total_connections`)
         io.of('/p').to(roomID).emit('host-left')
@@ -84,9 +86,9 @@ export const onHostAuth = async <T extends SocketAll>(
       }
     })
       ; (s as HostSocket).data.roomID = roomID
-    console.log('roomID: ', roomID)
     s.join(roomID)
     await redisDb.set(`room:${roomID}:host_in_room`, '1')
+    if (!hasPass) await redisDb.sadd('active_public_rooms', roomID)
     cbs?.beforeRes?.(s as ResultS<T>)
     emitIO().output(hostAuthSchema).emit(s, 'host-auth', {
       isSuccess: true,
