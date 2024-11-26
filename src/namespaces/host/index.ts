@@ -176,6 +176,21 @@ export const host = () => {
                 }, 2000)
               })
 
+              onIO().input(z.string().cuid2()).on(s, 'connection-failed', async (userID) => {
+                io.of('/p').to(roomID + userID).disconnectSockets()
+              })
+
+              onIO().input(z.string().cuid2()).on(s, 'connection-success', async (userID) => {
+                console.log('connection-success', userID)
+                try {
+                  await redisDb.incr(`room:${roomID}:total_players`)
+                  await redisDb.incr(`room:${roomID}:total_connections`)
+                  await redisDb.sadd(`room:${roomID}:players`, userID)
+                } catch (error) {
+                  console.error('error when connection-success', error)
+                }
+              })
+
               onIO()
                 .input(
                   z.object({

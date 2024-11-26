@@ -21,11 +21,13 @@ export const player = () => {
             console.log('clientID: ', clientID)
             s.on('disconnect', async () => {
               const isConnectedToHost = await redisDb.sismember(`room:${roomID}:players`, clientID)
-              await redisDb.srem(`room:${roomID}:players`, clientID)
               if (isConnectedToHost) {
+                console.log('disconnecting player')
+                await redisDb.srem(`room:${roomID}:players`, clientID)
                 await redisDb.decr(`room:${roomID}:total_connections`)
                 await redisDb.decr(`room:${roomID}:total_players`)
               }
+
               emitIO()
                 .output(z.union([userSchema, guestSchema]))
                 .emit(io.of('/h').to(roomID), 'player-left', clientInfo)
@@ -51,8 +53,8 @@ export const player = () => {
             console.log('clientID: ', clientID)
             s.on('disconnect', async () => {
               const isConnectedToHost = await redisDb.sismember(`room:${roomID}:players`, clientID)
-              await redisDb.srem(`room:${roomID}:players`, clientID)
               if (isConnectedToHost) {
+                await redisDb.srem(`room:${roomID}:players`, clientID)
                 await redisDb.decr(`room:${roomID}:total_connections`)
                 await redisDb.decr(`room:${roomID}:total_players`)
               }
