@@ -7,9 +7,12 @@ import { z } from 'zod'
 export const validateGuest = async (s: SocketAll) => {
   try {
     const cookies = getCookies(s)
+    console.log('cookies: ', cookies)
     if (!cookies) return
 
+
     const authSession = cookies['guest_auth_session']
+    console.log('authSession: ', authSession)
     z.string().min(10).cuid2().parse(authSession)
 
     if (!authSession) return null

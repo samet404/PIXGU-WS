@@ -39,6 +39,7 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
     const failed: (keyof Cbs)[] = []
 
     if (cbs.logged) {
+      console.log('validating is logged')
       const logged = await validateUser(s)
       console.log(logged)
       if (logged) {
@@ -63,6 +64,7 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
     }
 
     if (cbs.guest) {
+      console.log('validating is guest')
       const guest = await validateGuest(s)
       console.log(guest)
 

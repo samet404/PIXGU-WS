@@ -5,11 +5,13 @@ import { killGuest } from './kill'
 import { z } from 'zod'
 
 export const validateGuest = async (s: SocketAll) => {
+  console.log('validateGuest')
   try {
     const cookies = getCookies(s)
     if (!cookies) return
 
     const authSession = cookies['guest_auth_session']
+    console.log('authSession: ', authSession)
     z.string().min(10).cuid2().parse(authSession)
 
     if (!authSession) return null
