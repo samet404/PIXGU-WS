@@ -1,5 +1,5 @@
 import { z, ZodSchema } from 'zod'
-import type { SocketAll } from '../types'
+import type { AllSocketTypes } from '../types'
 import { logErr } from './logErr'
 
 /**
@@ -38,7 +38,7 @@ export const onIO: onIO = () => ({
   },
 })
 
-type IO = SocketAll
+type IO = AllSocketTypes
 
 type onIO = () => {
   data: {

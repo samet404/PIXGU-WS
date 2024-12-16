@@ -1,59 +1,71 @@
-import type { Socket } from 'socket.io'
-import type { OverrideProps } from '.'
 import type { Session, User } from 'lucia'
 import type { Guest } from './guest'
+import type { OverrideProps } from './overrideProps'
+import type { Socket } from 'socket.io'
+import type { Contains } from './contains'
 
-export type NotJoinedSocket = OverrideProps<
+export type NotLoggedSocketData = {
+  isLogged: false
+}
+
+export type LoggedSocketData = {
+  isLogged: true
+  userID: string
+  isGuest: false
+  user: User
+  session: Session
+}
+
+
+export type GuestSocketData = {
+  isLogged: false
+  isGuest: true
+  guestID: string
+  guest: Guest
+}
+
+export type GuestPlayerSocket = {
+  isPlayer: true
+  roomID: string
+}
+
+export type IsJoinedSocketData<T extends AllSocketData> = Contains<GuestSocketData | LoggedSocketData, T>
+export type IsJoinedSocket<T extends AllSocketTypes> = Contains<GuestSocketData | LoggedSocketData, T['data']>
+
+export type JoinedSocket = OverrideProps<Socket, {
+  data: (LoggedSocketData | GuestSocketData) & {
+    isPlayer: boolean
+    roomID: string
+  }
+}>
+
+export type LoggedPlayerSocket = {
+  isPlayer: true
+  roomID: string
+}
+
+export type AllSocketTypes = OverrideProps<
   Socket,
   {
-    data: {
-      isLogged: false
-    }
+    data: any
   }
 >
 
-export type LoggedSocket = OverrideProps<
-  Socket,
-  {
-    data: {
-      isLogged: true
-      userID: string
-      user: User
-      session: Session
-    }
-  }
->
+export type IsSocket<T extends any> = OverrideProps<Socket, {
+  data: any
+}> extends OverrideProps<T, {
+  data: any
+}> ? true : never
 
-export type GuestSocket = OverrideProps<
-  Socket,
-  {
-    data: {
-      isLogged: false
-      isGuest: true
-      guestID: string
-      guest: Guest
-    }
-  }
->
+export type AllSocketData = LoggedSocketData | GuestSocketData
 
-export type GuestPlayerSocket = OverrideProps<
-  Socket,
-  {
-    data: {
-      isPlayer: true
-      roomID: string
-    } & GuestSocket['data']
+export type HostSocket<T extends AllSocketData> = OverrideProps<Socket, {
+  data: T & {
+    isHost: true
+    roomID: string
   }
->
+}>
 
-export type LoggedPlayerSocket = OverrideProps<
-  Socket,
-  {
-    data: {
-      isPlayer: true
-      roomID: string
-    } & LoggedSocket['data']
-  }
->
-
-export type SocketAll = LoggedSocket | Socket | GuestSocket
+export type SocketWithoutData = OverrideProps<Socket, {
+  data: any
+}>

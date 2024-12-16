@@ -1,15 +1,17 @@
-import type { Socket } from 'socket.io'
 import type {
+  AllSocketData,
   AtLeastOne,
-  GuestSocket,
-  LoggedSocket,
-  NotJoinedSocket,
-  SocketAll,
+  GuestSocketData,
+  LoggedSocketData,
+  NotLoggedSocketData,
+  OverrideProps,
 } from '@/types'
 import { emitIO } from '@/utils'
 import { validateUser } from '@/lucia'
+import type { Socket } from 'socket.io'
 import { validateGuest } from '../auth/guest'
 import { z } from 'zod'
+
 
 /**
  * Authenticates a socket
@@ -31,7 +33,10 @@ import { z } from 'zod'
  *
  * `In this example, if user is logged in, the "logged" callbacks will be called.`
  */
-export const onAuth = (s: Socket, cbs: Cbs) => {
+export const onAuth = <SocketT extends Omit<Socket, 'data'>>(s: OverrideProps<SocketT, {
+  data: any
+}>, cbs: Cbs) => {
+
   const auth = async () => {
     console.log('Authenticating user...')
     let isLogged = false
@@ -41,7 +46,7 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
     if (cbs.logged) {
       console.log('validating is logged')
       const logged = await validateUser(s)
-      console.log(logged)
+
       if (logged) {
         const { user, session } = logged
         isLogged = true
@@ -118,7 +123,6 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
         return
       }
 
-      console.log('notJoined3')
       const user = await validateUser(s)
       const guest = await validateGuest(s)
 
@@ -147,23 +151,30 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
   s.once('auth', auth)
 }
 
+type ReturnedSocket<WithT> = OverrideProps<Socket, {
+  data: WithT & {
+    isPlayer: boolean
+    roomID: string
+  }
+}>
+
 type Cbs = {
   logged?: AtLeastOne<{
-    beforeRes: (s: LoggedSocket) => void
-    afterRes: (s: LoggedSocket) => void
+    beforeRes: (s: ReturnedSocket<LoggedSocketData>) => void
+    afterRes: (s: ReturnedSocket<LoggedSocketData>) => void
   }>
 
   notJoined?: AtLeastOne<{
-    beforeRes: (s: NotJoinedSocket) => void
-    afterRes: (s: NotJoinedSocket) => void
+    beforeRes: (s: ReturnedSocket<NotLoggedSocketData>) => void
+    afterRes: (s: ReturnedSocket<NotLoggedSocketData>) => void
   }>
 
   guest?: AtLeastOne<{
-    beforeRes: (s: GuestSocket) => void
-    afterRes: (s: GuestSocket) => void
+    beforeRes: (s: ReturnedSocket<GuestSocketData>) => void
+    afterRes: (s: ReturnedSocket<GuestSocketData>) => void
   }>
   default?: AtLeastOne<{
-    beforeRes: (s: SocketAll) => void
-    afterRes: (s: SocketAll) => void
+    beforeRes: (s: ReturnedSocket<AllSocketData>) => void
+    afterRes: (s: ReturnedSocket<AllSocketData>) => void
   }>
 }

@@ -1,19 +1,26 @@
 import { z } from 'zod'
-import { emitIO, hToMS, logErr, onIO, setRealTimeout } from '@/utils'
+import { emitIO, logErr, onIO } from '@/utils'
 import { redisDb } from '@/redis'
 import { lookupCity } from '@/geoIP'
 import { emitErr, createRoomID } from './funcs'
 import { env } from '@/env'
-import { hToS } from '@/utils'
 import { io } from '@/io'
-import type { GuestSocket, LoggedSocket } from '@/types'
 import { REDIS_ROOM_KEYS_BY_ROOM_ID, REDIS_ROOM_KEYS_BY_USER_ID, REDIS_ROOM_OTHERS_KEYS } from '@/constants'
-import { killRoom } from '@/helpers'
+import type { GuestSocketData, LoggedSocketData, OverrideProps } from '@/types'
+import type { Socket } from 'socket.io'
+
+type ContainsOneOfThese = LoggedSocketData | GuestSocketData
+type RequiredSocket = OverrideProps<Socket, {
+  data: ContainsOneOfThese & {
+    isPlayer: boolean
+    roomID: string
+  }
+}>
 
 /**
  * Creates a room
  */
-export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
+export const onCreateRoom = (s: RequiredSocket) =>
   onIO()
     .input(
       z.object({
@@ -95,16 +102,6 @@ export const onCreateRoom = (s: GuestSocket | LoggedSocket) =>
           await redisDb.set(redisKeysByRoomID.password, password)
           await redisDb.sadd(redisKeysByRoomID.playersKnownPass, userID)
         }
-
-        for (const key of Object.keys(redisKeysByRoomID)) {
-          await redisDb.expire(key, hToMS(24))
-        }
-
-
-        setRealTimeout(() =>
-          killRoom(roomID, 'TIME_IS_UP'),
-          hToMS(80),
-        )
 
         emitIO()
           .output(z.any())

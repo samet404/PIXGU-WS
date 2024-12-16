@@ -5,7 +5,7 @@ import { seed } from './db/redis/seed'
 import { env } from './env'
 
 env.NODE_ENV === 'production' && seed()
-console.log('dsoapdjopsa')
+
 runAll(
   // first
   getEveryoneOutRoomsInRedis,

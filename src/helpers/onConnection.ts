@@ -4,14 +4,15 @@ import { tooManyConnections } from '../middleware'
 import { redisDb } from '../db/redis'
 import { env } from '../env'
 
+const log = console.log
+const positiveLog = (...a: any) => log(chalk.greenBright(a))
+const negativeLog = (...a: any) => log(chalk.redBright(a))
+const xNegativeLog = (...a: any) => log(chalk.bgRed(a))
+
 export const onConnection = async (
   io: Server | Namespace,
   cb: (socket: Socket) => void,
 ) => {
-  const log = console.log
-  const positiveLog = (...a: any) => log(chalk.greenBright(a))
-  const negativeLog = (...a: any) => log(chalk.redBright(a))
-  const xNegativeLog = (...a: any) => log(chalk.bgRed(a))
 
   io.on('connection', async (socket) => {
     const connectionsCount = await tooManyConnections(socket)
@@ -42,8 +43,8 @@ export const onConnection = async (
             connectionCount:
               env.NODE_ENV === 'production'
                 ? (await redisDb.get(
-                    `IP:${socket.data.IP}:connection_count`,
-                  )) || '0'
+                  `IP:${socket.data.IP}:connection_count`,
+                )) || '0'
                 : undefined,
           },
           null,

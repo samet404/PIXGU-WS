@@ -3,20 +3,45 @@ import { getRoomID } from '@/helpers'
 import { emitIO } from '@/src/utils'
 import { redisDb } from '@/redis'
 import { env } from '@/src/env'
-import chalk from 'chalk'
 import { z } from 'zod'
+import chalk from 'chalk'
 import type {
-  GuestPlayerSocket,
-  GuestSocket,
-  LoggedPlayerSocket,
-  LoggedSocket,
+  Contains,
+  GuestSocketData,
+  LoggedSocketData,
+  OverrideProps,
 } from '@/types'
+import { Socket } from 'socket.io'
 
-export const isPlayer = async (
-  s: LoggedSocket | GuestSocket,
-  cb: (s: GuestPlayerSocket | LoggedPlayerSocket) => void,
+type ContainsOneOfThese = LoggedSocketData | GuestSocketData
+type ReturnedSocket = OverrideProps<Socket, {
+  data: ContainsOneOfThese & {
+    isPlayer: boolean
+    roomID: string
+  }
+}>
+
+
+const playerAuthSchema = z.union([
+  z.object({
+    isSuccess: z.literal(false),
+    reason: z.object({
+      code: z.string(),
+      message: z.string(),
+    }),
+  }),
+  z.object({
+    isSuccess: z.literal(true),
+  }),
+])
+
+
+const errLog = (a: any) => console.log(chalk.redBright(a))
+
+export const isPlayer = async <T>(
+  s: Contains<ContainsOneOfThese, T> extends never ? never : ReturnedSocket,
+  cb: (s: ReturnedSocket) => void,
 ) => {
-  const errLog = (a: any) => console.log(chalk.redBright(a))
   const roomID = getRoomID(s)
   const clientID = s.data.isLogged ? s.data.userID : s.data.guestID
 
@@ -137,24 +162,11 @@ export const isPlayer = async (
 
   s.join(roomID + clientID)
   s.join(roomID)
-    ; (s as LoggedPlayerSocket | GuestPlayerSocket).data.isPlayer = true
-    ; (s as LoggedPlayerSocket | GuestPlayerSocket).data.roomID = roomID
+  s.data.isPlayer = true
+  s.data.roomID = roomID
 
   emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
     isSuccess: true,
   })
-  cb(s as LoggedPlayerSocket | GuestPlayerSocket)
+  cb(s)
 }
-
-const playerAuthSchema = z.union([
-  z.object({
-    isSuccess: z.literal(false),
-    reason: z.object({
-      code: z.string(),
-      message: z.string(),
-    }),
-  }),
-  z.object({
-    isSuccess: z.literal(true),
-  }),
-])

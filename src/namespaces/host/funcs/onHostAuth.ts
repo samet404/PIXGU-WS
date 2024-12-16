@@ -2,33 +2,37 @@ import { redisDb } from '@/redis'
 import { io } from '@/io'
 import { emitIO, logErr } from '@/utils'
 import type {
+  AllSocketData,
   AtLeastOne,
-  GuestSocket,
-  LoggedSocket,
-  OverrideProps,
-  SocketAll,
+  HostSocket,
+  IsJoinedSocketData,
+  JoinedSocket,
 } from '@/types'
 import { getRoomID } from '@/helpers'
 import { z } from 'zod'
+import type { Socket } from 'socket.io'
 
-type HostSocket = OverrideProps<
-  LoggedSocket,
-  {
-    data: {
-      isHost: true
-      roomID: string
-    } & LoggedSocket['data']
-  }
->
 
-export const onHostAuth = async <T extends SocketAll>(
-  s: T,
+const hostAuthSchema = z.union([
+  z.object({
+    isSuccess: z.literal(false),
+    reason: z.string(),
+  }),
+  z.object({
+    isSuccess: z.literal(true),
+  }),
+])
+
+
+export const onHostAuth = async <T extends AllSocketData>(
+  s: IsJoinedSocketData<T> extends never ? never : JoinedSocket,
   cbs?: AtLeastOne<{
-    beforeRes: (s: ResultS<T>) => void
-    afterRes: (s: ResultS<T>) => void
+    beforeRes: (s: HostSocket<T>) => void
+    afterRes: (s: HostSocket<T>) => void
   }>,
 ) =>
   s.once('host-auth', async () => {
+
     let isDisconnected = false
     const roomID = getRoomID(s)
     const hasPass = await redisDb.get(`room:${roomID}:password`)
@@ -76,45 +80,24 @@ export const onHostAuth = async <T extends SocketAll>(
     s.emit('host-joined', s.data.isLogged ? s.data.user : s.data.guest)
 
     s.on('disconnect', async () => {
-      const isInRoom = await redisDb.get(`room:${roomID}:host_in_room`)
-      if (isInRoom === '1') {
-        if (!hasPass) await redisDb.srem('active_public_rooms', roomID)
-        io.of('/p').to(roomID).emit('host-left')
-        io.of('/p').to(roomID).disconnectSockets()
-        await redisDb.set(`room:${roomID}:host_in_room`, '0')
-        await redisDb.set(`room:${roomID}:total_players`, '0')
-        await redisDb.set(`room:${roomID}:total_connections`, '0')
-      }
+      if (!hasPass) await redisDb.srem('active_public_rooms', roomID)
+      io.of('/p').to(roomID).emit('host-left')
+      io.of('/p').to(roomID).disconnectSockets()
+      await redisDb.set(`room:${roomID}:host_in_room`, '0')
+      await redisDb.set(`room:${roomID}:total_players`, '0')
+      await redisDb.set(`room:${roomID}:total_connections`, '0')
     })
-      ; (s as HostSocket).data.roomID = roomID
+
+    s.data.roomID = roomID
     s.join(roomID)
     await redisDb.set(`room:${roomID}:host_in_room`, '1')
     await redisDb.set(`room:${roomID}:game_started`, '0')
     if (!hasPass) await redisDb.sadd('active_public_rooms', roomID)
-    cbs?.beforeRes?.(s as ResultS<T>)
+
+    cbs?.beforeRes?.(s as unknown as HostSocket<T>)
     emitIO().output(hostAuthSchema).emit(s, 'host-auth', {
       isSuccess: true,
     })
-    cbs?.afterRes?.(s as ResultS<T>)
+    cbs?.afterRes?.(s as unknown as HostSocket<T>)
   })
 
-const hostAuthSchema = z.union([
-  z.object({
-    isSuccess: z.literal(false),
-    reason: z.string(),
-  }),
-  z.object({
-    isSuccess: z.literal(true),
-  }),
-])
-
-type ResultS<T extends SocketAll> = OverrideProps<
-  T,
-  {
-    data: {
-      isHost: true
-      roomID: string
-    }
-  }
-> &
-  T
