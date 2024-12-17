@@ -14,6 +14,11 @@ export const REDIS_ROOM_KEYS_BY_ROOM_ID = (roomID: string) => ({
     playersKnownPass: `room:${roomID}:players_known_pass`,
     blockedUsers: `room:${roomID}:blocked_users`,
     totalPlayers: `room:${roomID}:total_players`,
+    version: `room:${roomID}:version`,
+})
+
+export const REDIS_ROOM_KEYS_BY_VERSION = (version: string) => ({
+    createdRooms: `version:${version}:rooms`,
 })
 
 export const REDIS_ROOM_OTHERS_KEYS = {

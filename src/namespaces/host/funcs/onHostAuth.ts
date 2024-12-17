@@ -8,9 +8,10 @@ import type {
   IsJoinedSocketData,
   JoinedSocket,
 } from '@/types'
-import { getRoomID } from '@/helpers'
+import { getRoomID, killRoom } from '@/helpers'
 import { z } from 'zod'
 import type { Socket } from 'socket.io'
+import { VERSION } from '@/src/constants'
 
 
 const hostAuthSchema = z.union([
@@ -32,9 +33,20 @@ export const onHostAuth = async <T extends AllSocketData>(
   }>,
 ) =>
   s.once('host-auth', async () => {
-
     let isDisconnected = false
     const roomID = getRoomID(s)
+    const roomVersion = await redisDb.get(`room:${roomID}:version`)
+
+    if (roomVersion !== VERSION) {
+      emitIO().output(hostAuthSchema).emit(s, 'host-auth', {
+        isSuccess: false,
+        reason: 'UNAUTHORIZED: INCOMPATIBLE_VERSION',
+      })
+      s.disconnect()
+      killRoom(roomID, 'UPDATE_REQUIRED')
+      return
+    }
+
     const hasPass = await redisDb.get(`room:${roomID}:password`)
 
     const isRoomActiveInRedis = await redisDb.sismember('active_rooms', roomID)

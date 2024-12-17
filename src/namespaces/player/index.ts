@@ -1,5 +1,5 @@
 import type { Guest, GuestSocketData, LoggedSocketData, OverrideProps } from '@/types'
-import { onAuth, onConnection } from '@/helpers'
+import { getRoomID, onAuth, onConnection } from '@/helpers'
 import { authorizedPlayer } from './authorizedPlayer'
 import { guestSchema, userSchema } from '@/zod/schema'
 import { io } from '@/io'
@@ -48,13 +48,23 @@ export const player = () => {
 
       guest: {
         beforeRes: (s) => authorizedPlayer(s),
-        afterRes: (s) =>
-          s.once('ready', ready),
+        afterRes: (s) => {
+          const roomID = getRoomID(s)
+          const guestID = s.data.guestID
+          const guest = s.data.guest
+
+          s.once('ready', () => ready(s, roomID, guestID, guest))
+        },
       },
       logged: {
         beforeRes: (s) => authorizedPlayer(s),
-        afterRes: (s) =>
-          s.once('ready', ready),
+        afterRes: (s) => {
+          const roomID = getRoomID(s)
+          const userID = s.data.userID
+          const user = s.data.user
+
+          s.once('ready', () => ready(s, roomID, userID, user))
+        }
       },
     })
   })

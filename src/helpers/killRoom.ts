@@ -13,10 +13,10 @@ export const killRoom = async (
     const host = io.of('/h').to(roomID)
 
     emitIO().output(z.object({
-      reason: z.enum(['TIME_IS_UP', 'SERVER_RESTART', 'HOST', 'GAME_UPDATE']),
+      reason: z.enum(['TIME_IS_UP', 'SERVER_RESTART', 'HOST', 'UPDATE_REQUIRED']),
     })).emit(players, 'room_killed', { reason: reason } as RoomKilled)
     emitIO().output(z.object({
-      reason: z.enum(['TIME_IS_UP', 'SERVER_RESTART', 'HOST', 'GAME_UPDATE']),
+      reason: z.enum(['TIME_IS_UP', 'SERVER_RESTART', 'HOST', 'UPDATE_REQUIRED']),
     })).emit(host, 'room_killed', { reason: reason } as RoomKilled)
 
     const redisRoomKeysByRoomID = REDIS_ROOM_KEYS_BY_ROOM_ID(roomID)
@@ -44,7 +44,7 @@ export const killRoom = async (
 }
 
 type RoomKilled = {
-  reason: 'TIME_IS_UP' | 'SERVER_RESTART' | 'HOST' | 'GAME_UPDATE'
+  reason: 'TIME_IS_UP' | 'SERVER_RESTART' | 'HOST' | 'UPDATE_REQUIRED'
 }
 
-type Reason = 'TIME_IS_UP' | 'SERVER_RESTART' | 'HOST' | 'GAME_UPDATE'
+type Reason = 'TIME_IS_UP' | 'SERVER_RESTART' | 'HOST' | 'UPDATE_REQUIRED'

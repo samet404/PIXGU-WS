@@ -1,9 +1,11 @@
-import chalk from 'chalk'
-import { env } from './env'
 import { Server, type ServerOptions } from 'socket.io'
-import express from 'express'
 import { fileURLToPath } from 'node:url'
+import { VERSION } from './constants'
+import { redisDb } from './db/redis'
+import express from 'express'
 import path from 'node:path'
+import { env } from './env'
+import chalk from 'chalk'
 
 const port = parseInt(env.PORT)
 const app = express()
@@ -47,6 +49,7 @@ log(
         socketio: serverOptions,
         env: env,
         port: port,
+        version: VERSION,
       },
       null,
       2,
@@ -55,9 +58,10 @@ log(
 )
 
 export const io = new Server(server, serverOptions)
-io.listen(port)
 
 log(`${chalk.yellowBright(`\n Listening on port ${port}`)} ⚡️`)
+io.listen(port)
+await redisDb.set('last_version', VERSION)
 
 io.engine.on('connection_error', (err) => {
   console.log('io.engine.on connection_error: ', err)

@@ -3,9 +3,9 @@ import { onAuth, onConnection } from '@/helpers'
 import { onCreateRoom } from './onCreateRoom'
 import { onKill } from './onKill'
 
-export const cr = () => {
-  const crIO = io.of('/cr')
+export const crIO = io.of('/cr')
 
+export const cr = () => {
   onConnection(crIO, (s) =>
     onAuth(s, {
       guest: {

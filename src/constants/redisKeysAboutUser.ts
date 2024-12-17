@@ -1,0 +1,1 @@
+export const REDIS_KEYS_STARTS_WITH_ABOUT_USER = ['user:', 'guest:']

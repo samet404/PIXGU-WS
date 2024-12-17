@@ -5,9 +5,10 @@ import { lookupCity } from '@/geoIP'
 import { emitErr, createRoomID } from './funcs'
 import { env } from '@/env'
 import { io } from '@/io'
-import { REDIS_ROOM_KEYS_BY_ROOM_ID, REDIS_ROOM_KEYS_BY_USER_ID, REDIS_ROOM_OTHERS_KEYS } from '@/constants'
+import { REDIS_ROOM_KEYS_BY_ROOM_ID, REDIS_ROOM_KEYS_BY_USER_ID, REDIS_ROOM_OTHERS_KEYS, VERSION } from '@/constants'
 import type { GuestSocketData, LoggedSocketData, OverrideProps } from '@/types'
 import type { Socket } from 'socket.io'
+import { crIO } from '..'
 
 type ContainsOneOfThese = LoggedSocketData | GuestSocketData
 type RequiredSocket = OverrideProps<Socket, {
@@ -43,10 +44,18 @@ export const onCreateRoom = (s: RequiredSocket) =>
     )
     .on(s, 'cr', async (input) => {
       try {
+        const lastVersion = await redisDb.get('last_version')
+
+        if (lastVersion !== VERSION) {
+          crIO.disconnectSockets()
+          return
+        }
+
         const userID = (() => {
           if (s.data.isLogged) return s.data.userID
           return s.data.guestID
         })()
+
         console.log('userID: ', userID)
         console.log(s.data)
 
@@ -97,6 +106,7 @@ export const onCreateRoom = (s: RequiredSocket) =>
         await redisDb.set(redisKeysByRoomID.hostCountry, country)
         await redisDb.set(redisKeysByRoomID.hostLL, JSON.stringify(ll))
         await redisDb.sadd(redisKeysByUserID.createdRooms, roomID!)
+        await redisDb.set(redisKeysByRoomID.version, VERSION)
 
         if (password) {
           await redisDb.set(redisKeysByRoomID.password, password)

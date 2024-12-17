@@ -1,4 +1,4 @@
-import { MAX_PLAYERS_PER_ROOM } from '@/constants'
+import { MAX_PLAYERS_PER_ROOM, VERSION } from '@/constants'
 import { getRoomID } from '@/helpers'
 import { emitIO } from '@/src/utils'
 import { redisDb } from '@/redis'
@@ -43,6 +43,21 @@ export const isPlayer = async <T>(
   cb: (s: ReturnedSocket) => void,
 ) => {
   const roomID = getRoomID(s)
+  const roomVersion = await redisDb.get(`room:${roomID}:version`)
+  const lastVersion = await redisDb.get('last_version')
+
+  if (roomVersion !== lastVersion) {
+    emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
+      isSuccess: false,
+      reason: {
+        code: 'INCOMPATIBLE_VERSION',
+        message: 'Room is not compatible with new version',
+      },
+    })
+    s.disconnect()
+    return
+  }
+
   const clientID = s.data.isLogged ? s.data.userID : s.data.guestID
 
   const isGameAlreadyStarted = (await redisDb.get(`room:${roomID}:game_started`)) === '1'

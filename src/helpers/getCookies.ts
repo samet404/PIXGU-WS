@@ -1,6 +1,6 @@
-import type { SocketAll } from '../types'
+import type { AllSocketTypes, IsSocket } from '../types'
 
-export const getCookies = (s: SocketAll) => {
+export const getCookies = <T extends AllSocketTypes>(s: IsSocket<T> extends never ? never : T) => {
   const cookies = s.handshake.headers.cookie
   if (!cookies) {
     s.disconnect()
