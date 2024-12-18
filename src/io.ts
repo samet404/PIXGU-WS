@@ -14,23 +14,22 @@ const __filename = fileURLToPath(import.meta.url); // get the resolved path to t
 const __dirname = path.dirname(__filename); // get the name of the directory
 
 const server = await (async () => {
-  const createServer = (await import('node:http')).createServer
+  if (env.NODE_ENV === 'development') {
+    const createServer = (await import('node:http')).createServer
 
-  return createServer(app)
-  // if (env.NODE_ENV === 'development') {
+    return createServer(app)
+  } else if (env.NODE_ENV === 'production') {
+    const { createServer } = await import('https')
+    const fs = await import('fs')
 
-  // } else if (env.NODE_ENV === 'production') {
-  //   const { createServer } = await import('https')
-  //   const fs = await import('fs')
-
-  //   return createServer(
-  //     {
-  //       cert: fs.readFileSync(`${__dirname}/ssl/domain.cert.pem`),
-  //       key: fs.readFileSync(`${__dirname}/ssl/private.key.pem`),
-  //     },
-  //     app,
-  //   )
-  // }
+    return createServer(
+      {
+        cert: fs.readFileSync(`${__dirname}/ssl/domain.cert.pem`),
+        key: fs.readFileSync(`${__dirname}/ssl/private.key.pem`),
+      },
+      app,
+    )
+  }
 })()
 
 const serverOptions: Partial<ServerOptions> = {
