@@ -23,10 +23,7 @@ const server = await (async () => {
     const fs = await import('fs')
 
     return createServer(
-      {
-        cert: fs.readFileSync(`${__dirname}/ssl/domain.cert.pem`),
-        key: fs.readFileSync(`${__dirname}/ssl/private.key.pem`),
-      },
+
       app,
     )
   }
