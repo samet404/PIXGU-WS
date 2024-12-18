@@ -46,7 +46,10 @@ export const isPlayer = async <T>(
   const roomVersion = await redisDb.get(`room:${roomID}:version`)
   const lastVersion = await redisDb.get('last_version')
 
+  console.log(`${roomID} version is ${roomVersion}`)
+
   if (roomVersion !== lastVersion) {
+    console.log(`Room ${roomID} incompatible with version last version ${lastVersion}`)
     emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
       isSuccess: false,
       reason: {
