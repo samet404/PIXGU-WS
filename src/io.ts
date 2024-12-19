@@ -2,34 +2,42 @@ import { Server, type ServerOptions } from 'socket.io'
 import { fileURLToPath } from 'node:url'
 import { VERSION } from './constants'
 import { redisDb } from './db/redis'
-// import express from 'express'
+import express from 'express'
 import path from 'node:path'
 import { env } from './env'
 import chalk from 'chalk'
+import { Hono } from "hono";
+import { serve } from "@hono/node-server";
+
 
 const port = parseInt(env.PORT)
-// const app = express()
-
+const app = new Hono()
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
 const server = await (async () => {
-  if (env.NODE_ENV === 'development') {
-    const createServer = (await import('node:http')).createServer
+  return serve({
+    fetch: app.fetch,
+    port: port,
+  });
 
-    return createServer()
-  } else if (env.NODE_ENV === 'production') {
-    const { createServer } = await import('https')
-    const fs = await import('fs')
+  // if (env.NODE_ENV === 'development') {
+  //   const createServer = (await import('node:http')).createServer
 
-    return createServer(
-      {
-        cert: fs.readFileSync(`${__dirname}/ssl/domain.cert.pem`),
-        key: fs.readFileSync(`${__dirname}/ssl/private.key.pem`),
-      },
-    )
-  }
+  //   return createServer(app)
+  // } else if (env.NODE_ENV === 'production') {
+  //   const { createServer } = await import('https')
+  //   const fs = await import('fs')
+
+  //   return createServer(
+  //     {
+  //       cert: fs.readFileSync(`${__dirname}/ssl/domain.cert.pem`),
+  //       key: fs.readFileSync(`${__dirname}/ssl/private.key.pem`),
+  //     },
+  //     app,
+  //   )
+  // }
 })()
 
 const serverOptions: Partial<ServerOptions> = {
@@ -60,7 +68,6 @@ log(
 export const io = new Server(server, serverOptions)
 
 log(`${chalk.yellowBright(`\n Listening on port ${port}`)} ⚡️`)
-io.listen(port)
 await redisDb.set('last_version', VERSION)
 
 io.engine.on('connection_error', (err) => {
