@@ -1,37 +1,14 @@
 import { Server, type ServerOptions } from 'socket.io'
-import { fileURLToPath } from 'node:url'
+import { createServer } from 'node:http'
 import { VERSION } from './constants'
-import { redisDb } from './db/redis'
 import express from 'express'
-import path from 'node:path'
 import { env } from './env'
 import chalk from 'chalk'
 
+const log = console.log
 const port = parseInt(env.PORT)
 const app = express()
-
-const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); // get the name of the directory
-
-const server = await (async () => {
-  const createServer = (await import('node:http')).createServer
-
-  return createServer(app)
-  // if (env.NODE_ENV === 'development') {
-  // } else if (env.NODE_ENV === 'production') {
-  //   const { createServer } = await import('https')
-  //   const fs = await import('fs')
-
-  //   return createServer(
-  //     {
-  //       cert: fs.readFileSync(`${__dirname}/ssl/domain.cert.pem`),
-  //       key: fs.readFileSync(`${__dirname}/ssl/private.key.pem`),
-  //     },
-  //     app,
-  //   )
-  // }
-})()
-
+const server = createServer(app)
 const serverOptions: Partial<ServerOptions> = {
   /* options here */
 
@@ -41,7 +18,6 @@ const serverOptions: Partial<ServerOptions> = {
   },
 }
 
-const log = console.log
 log(
   `${chalk.magentaBright.bold(
     JSON.stringify(
@@ -54,14 +30,13 @@ log(
       null,
       2,
     ),
-  )}`,
+  )}`
 )
 
 export const io = new Server(server, serverOptions)
 
 log(`${chalk.yellowBright(`\n Listening on port ${port}`)} ⚡️`)
 io.listen(port)
-await redisDb.set('last_version', VERSION)
 
 io.engine.on('connection_error', (err) => {
   console.log('io.engine.on connection_error: ', err)

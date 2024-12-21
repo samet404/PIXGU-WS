@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "npx tsx watch --env-file=.env src/server.ts",
     "prod": "npx tsx --env-file=.env src/server.ts ",
-    "redis:seed": "npx tsx --env-file=.env src/db/redis/seed/index.ts"
+    "redis:seed": "npx tsx --env-file=.env src/db/redis/seed/index.ts",
+    "version:changed": "npx tsx --env-file=.env src/helpers/versionChanged.ts",
+    "version:change": "npx tsx --env-file=.env src/helpers/setLastVersion.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"

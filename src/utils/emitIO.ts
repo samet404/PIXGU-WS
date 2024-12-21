@@ -1,7 +1,7 @@
 import type { BroadcastOperator, Namespace, Server, Socket } from 'socket.io'
 import { z, ZodSchema } from 'zod'
 import { logErr } from '@/utils'
-import type { SocketAll } from '@/types'
+import type { AllSocketTypes } from '@/types'
 
 /**
  * emitIO is a utility to emit data to a socket.io client.
@@ -47,7 +47,7 @@ export const emitIO: EmitIO = () => ({
   }
 })
 
-type IO = Server | Namespace | SocketAll | BroadcastOperator<any, any>
+type IO = Server | Namespace | AllSocketTypes | BroadcastOperator<any, any>
 
 type EmitIO = () => {
   data: {
