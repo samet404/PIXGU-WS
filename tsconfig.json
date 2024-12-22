@@ -13,6 +13,7 @@
       "@/zod/*": ["src/libs/zod/*"],
       "@/env": ["src/env/index.ts"],
       "@/helpers": ["src/helpers/index.ts"],
+      "@/store": ["src/store/index.ts"],
       "@/lucia": ["src/auth/lucia/index.ts"],
       "@/sqlDb": ["src/db/sqlDb/index.ts"],
       "@/geoIP": ["src/db/geoIP/index.ts"],

@@ -1,9 +1,9 @@
 import { redisDb } from '@/db/redis'
 import { getCookies } from '@/helpers'
-import type { SocketAll } from '@/types'
+import type { AllSocketTypes } from '@/types'
 import { z } from 'zod'
 
-export const killGuest = async (s: SocketAll) => {
+export const killGuest = async (s: AllSocketTypes) => {
   const cookies = getCookies(s)
   if (!cookies) return
 

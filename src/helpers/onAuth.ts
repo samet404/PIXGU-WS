@@ -12,7 +12,6 @@ import type { Socket } from 'socket.io'
 import { validateGuest } from '../auth/guest'
 import { z } from 'zod'
 
-
 /**
  * Authenticates a socket
  * @param s - socket
@@ -38,7 +37,9 @@ export const onAuth = <SocketT extends Omit<Socket, 'data'>>(s: OverrideProps<So
 }>, cbs: Cbs) => {
 
   const auth = async () => {
-    console.log('Authenticating user...')
+    console.log('Authenticating user...', {
+      handshake: s.handshake
+    })
     let isLogged = false
     let isGuest = false
     const failed: (keyof Cbs)[] = []

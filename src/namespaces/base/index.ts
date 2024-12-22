@@ -1,6 +1,6 @@
 import { io } from '@/io'
-import { onAuth } from '@/helpers'
+import { onAuth, onConnection } from '@/helpers'
 
-export const base = () => {
-  io.on('connection', (s) => onAuth(s, {}))
-}
+export const base = () => onConnection(io, (s) => {
+  console.log('base connected')
+})

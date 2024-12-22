@@ -3,6 +3,7 @@ import type { Namespace, Server, Socket } from 'socket.io'
 import { tooManyConnections } from '../middleware'
 import { redisDb } from '../db/redis'
 import { env } from '../env'
+import { storeConnectionsAllowed } from '../store'
 
 const log = console.log
 const positiveLog = (...a: any) => log(chalk.greenBright(a))
@@ -13,8 +14,12 @@ export const onConnection = async (
   io: Server | Namespace,
   cb: (socket: Socket) => void,
 ) => {
-
   io.on('connection', async (socket) => {
+    if (!storeConnectionsAllowed.isAllowed) {
+      socket.disconnect()
+      return
+    }
+
     const connectionsCount = await tooManyConnections(socket)
 
     const namespaceName = socket.nsp.name

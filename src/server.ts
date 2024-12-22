@@ -1,10 +1,11 @@
 import { runAll } from './utils'
-import { base, cr, host, player } from './namespaces'
+import { admin, base, cr, host, player } from './namespaces'
 
 runAll(
   base,
   host,
   player,
+  admin,
   cr,
 )
 

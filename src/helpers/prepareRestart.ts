@@ -1,3 +1,6 @@
+import { crIO, hostIO, playerIO } from '../namespaces'
+import { redisDb } from '../db/redis'
+import { storeConnectionsAllowed } from '../store'
 import {
     REDIS_ROOM_KEYS_BY_ROOM_ID,
     REDIS_ROOM_KEYS_BY_USER_ID,
@@ -5,21 +8,19 @@ import {
     REDIS_ROOM_OTHERS_KEYS,
     VERSION
 } from '../constants'
-import { crIO, hostIO, playerIO } from '../namespaces'
-import { redisDb } from '../db/redis'
 
-export const versionChanged = async () => {
+export const prepareRestart = async () => {
     try {
-        console.log('VERSION CHANGING')
-
+        console.log('RESTART REQUIRED')
+        storeConnectionsAllowed.isAllowed = false
         // #region Disconnect all players
-        playerIO.emit('leave-room', 'UPDATE_REQUIRED')
+        playerIO.emit('leave-room', 'SERVER_RESTART')
         playerIO.disconnectSockets()
 
-        hostIO.emit('leave-room', 'UPDATE_REQUIRED')
+        hostIO.emit('leave-room', 'SERVER_RESTART')
         hostIO.disconnectSockets()
 
-        crIO.emit('leave-room', 'UPDATE_REQUIRED')
+        crIO.emit('leave-room', 'SERVER_RESTART')
         crIO.disconnectSockets()
 
         playerIO.removeAllListeners()
@@ -59,7 +60,7 @@ export const versionChanged = async () => {
             await redisDb.del(redisKeysByRoomID.version)
         }
 
-        console.log('VERSION CHANGED')
+        console.log('RESTART REQUIRED successfull')
     } catch (error) {
         console.error('Error in versionChanged:', error)
     }
