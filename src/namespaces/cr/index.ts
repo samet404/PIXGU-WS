@@ -10,6 +10,8 @@ export const cr = () => {
     onAuth(s, {
       guest: {
         beforeRes: (s) => {
+          console.log('cr auth')
+
           onCreateRoom(s)
           onKill(s)
         },
