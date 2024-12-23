@@ -15,6 +15,7 @@ export const onConnection = async (
   cb: (socket: Socket) => void,
 ) => {
   io.on('connection', async (socket) => {
+    console.log('on connection for socket ', socket.id)
     if (!storeConnectionsAllowed.isAllowed) {
       console.log(`connections are not allowed disconnecting ${socket.id}...`)
       socket.disconnect()
