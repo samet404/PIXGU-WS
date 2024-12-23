@@ -48,7 +48,7 @@ export const onCreateRoom = (s: RequiredSocket) =>
         const lastVersion = await redisDb.get('last_version')
 
         if (lastVersion !== VERSION) {
-          console.log('last version is not equal to current version')
+          console.log(`last version (${lastVersion}) is not equal to current version (${VERSION})`)
           crIO.disconnectSockets()
           return
         }
