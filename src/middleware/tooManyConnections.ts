@@ -16,9 +16,8 @@ export const tooManyConnections = async (socket: Socket) => {
       throw new Error('Client IP not found')
     }
 
-    if (env.NODE_ENV === 'development') {
-      return { connectionCount: 0 }
-    }
+    if (env.NODE_ENV === 'development') return { connectionCount: 0 }
+
 
     const currentConnections = await getCurrentConnectionCount(clientIP)
 
@@ -54,8 +53,9 @@ const getCurrentConnectionCount = async (ip: string): Promise<number> => {
 }
 
 const handleTooManyConnections = (socket: Socket): void => {
-  socket.disconnect()
+  console.log('disconnecting socket because of too many connections')
   socket.to(socket.id).emit('too-many-connections')
+  socket.disconnect()
 }
 
 const incrementConnectionCount = async (ip: string): Promise<void> => {
@@ -63,7 +63,7 @@ const incrementConnectionCount = async (ip: string): Promise<void> => {
 }
 
 const setupDisconnectHandler = (socket: Socket, ip: string): void => {
-  socket.once('disconnect', async () => {
+  socket.on('disconnect', async () => {
     await redisDb.decr(`${REDIS_KEY_PREFIX}${ip}${REDIS_KEY_SUFFIX}`)
   })
 }
