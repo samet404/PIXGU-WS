@@ -1,5 +1,5 @@
 export const REDIS_ROOM_KEYS_BY_USER_ID = (userID: string) => ({
-    createdRooms: `user:${userID}:created_rooms`,
+    createdRooms: `created_rooms:user:${userID}`,
 })
 
 export const REDIS_ROOM_KEYS_BY_ROOM_ID = (roomID: string) => ({
