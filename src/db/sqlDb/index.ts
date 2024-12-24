@@ -1,10 +1,8 @@
-import * as schema from './schema';
-import { drizzle } from 'drizzle-orm/xata-http';
-import { getXataClient } from '@/src/xata';
+import * as schema from './schema'
+import { env } from '@/src/env'
+import { drizzle } from 'drizzle-orm/neon-http'
 
-const xata = getXataClient();
-
-export const db = drizzle(xata, {
+export const db = drizzle(env.NEON_DATABASE_URL, {
   schema,
   logger: true,
 });
