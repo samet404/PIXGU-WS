@@ -163,21 +163,6 @@ export const isPlayer = async <T>(
     return
   }
 
-  const isInRoom = env.NODE_ENV === 'development' ? false : (await redisDb.sismember(`room:${roomID}:players`, clientID)) === 1
-  if (isInRoom) {
-    errLog(`User ${clientID} is already in room ${roomID}`)
-    emitIO().output(playerAuthSchema).emit(s, 'player-auth', {
-      isSuccess: false,
-      reason: {
-        code: 'ALREADY_IN_ROOM',
-        message: 'You are already in the room',
-      },
-    })
-    s.disconnect()
-    return
-  }
-
-
   s.join(roomID + clientID)
   s.join(roomID)
   s.data.isPlayer = true
