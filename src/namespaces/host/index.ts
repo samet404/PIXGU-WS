@@ -62,8 +62,20 @@ const ready = async <SData extends AllSocketData>(s: HostSocket<SData>, roomID: 
 }
 
 const defaultListeners = <SData extends AllSocketData>(s: HostSocket<SData>, roomID: string) => {
-  onIO().input(z.string().cuid2()).on(s, 'connection-failed', async (userID) => {
-    io.of('/p').to(roomID + userID).disconnectSockets()
+  onIO().input(z.string().cuid2()).on(s, 'connection-failed', async (userID) => io.of('/p').to(roomID + userID).disconnectSockets())
+
+  onIO().input(z.string()).on(s, 'player-joined', async (userID) => {
+    console.log('player-joined', userID, roomID)
+    await redisDb.incr(`room:${roomID}:total_players`)
+    await redisDb.incr(`room:${roomID}:total_connections`)
+    await redisDb.sadd(`room:${roomID}:players`, userID)
+  })
+
+  onIO().input(z.string()).on(s, 'player-left', async (userID) => {
+    console.log('player-left', userID, roomID)
+    await redisDb.decr(`room:${roomID}:total_players`)
+    await redisDb.decr(`room:${roomID}:total_connections`)
+    await redisDb.srem(`room:${roomID}:players`, userID)
   })
 
   onIO().input(z.string().cuid2()).on(s, 'not-allowed', async (userID) => {
@@ -86,16 +98,6 @@ const defaultListeners = <SData extends AllSocketData>(s: HostSocket<SData>, roo
 
   })
 
-  onIO().input(z.string().cuid2()).on(s, 'connection-success', async (userID) => {
-    console.log('connection-success', userID)
-    try {
-      await redisDb.incr(`room:${roomID}:total_players`)
-      await redisDb.incr(`room:${roomID}:total_connections`)
-      await redisDb.sadd(`room:${roomID}:players`, userID)
-    } catch (error) {
-      console.error('error when connection-success', error)
-    }
-  })
 
   onIO()
     .input(

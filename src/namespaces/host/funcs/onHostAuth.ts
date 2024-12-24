@@ -75,10 +75,7 @@ export const onHostAuth = async <T extends AllSocketData>(
       return
     }
 
-    await redisDb.set(`room:${roomID}:host_in_room`, '0')
-
     const isInRoom = await redisDb.get(`room:${roomID}:host_in_room`)
-    console.log('isInRoom ', isInRoom)
     if (isInRoom === '1') {
       emitIO().output(hostAuthSchema).emit(s, 'host-auth', {
         isSuccess: false,
@@ -92,6 +89,7 @@ export const onHostAuth = async <T extends AllSocketData>(
     s.emit('host-joined', s.data.isLogged ? s.data.user : s.data.guest)
 
     s.on('disconnect', async () => {
+      console.log('host disconnected', roomID)
       if (!hasPass) await redisDb.srem('active_public_rooms', roomID)
       io.of('/p').to(roomID).emit('host-left')
       io.of('/p').to(roomID).disconnectSockets()
