@@ -72,6 +72,9 @@ const defaultListeners = <SData extends AllSocketData>(s: HostSocket<SData>, roo
   })
 
   onIO().input(z.string()).on(s, 'player-left', async (userID) => {
+    const totalPlayers = await redisDb.get(`room:${roomID}:total_players`)
+    if (totalPlayers === '0') return
+
     console.log('player-left', userID, roomID)
     await redisDb.decr(`room:${roomID}:total_players`)
     await redisDb.decr(`room:${roomID}:total_connections`)
