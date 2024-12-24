@@ -64,21 +64,16 @@ const ready = async <SData extends AllSocketData>(s: HostSocket<SData>, roomID: 
 const defaultListeners = <SData extends AllSocketData>(s: HostSocket<SData>, roomID: string) => {
   onIO().input(z.string().cuid2()).on(s, 'connection-failed', async (userID) => io.of('/p').to(roomID + userID).disconnectSockets())
 
-  onIO().input(z.string()).on(s, 'player-joined', async (userID) => {
-    console.log('player-joined', userID, roomID)
-    await redisDb.incr(`room:${roomID}:total_players`)
-    await redisDb.incr(`room:${roomID}:total_connections`)
-    await redisDb.sadd(`room:${roomID}:players`, userID)
-  })
+  onIO().input(z.object({
+    count: z.number(),
+    IDs: z.array(z.string().cuid2())
+  })).on(s, 'current-players', async (userID) => {
+    await redisDb.set(`room:${roomID}:total_players`, userID.count)
+    await redisDb.del(`room:${roomID}:players`)
 
-  onIO().input(z.string()).on(s, 'player-left', async (userID) => {
-    const totalPlayers = await redisDb.get(`room:${roomID}:total_players`)
-    if (totalPlayers === '0') return
-
-    console.log('player-left', userID, roomID)
-    await redisDb.decr(`room:${roomID}:total_players`)
-    await redisDb.decr(`room:${roomID}:total_connections`)
-    await redisDb.srem(`room:${roomID}:players`, userID)
+    for (const ID of userID.IDs) {
+      await redisDb.sadd(`room:${roomID}:players`, ID)
+    }
   })
 
   onIO().input(z.string().cuid2()).on(s, 'not-allowed', async (userID) => {
