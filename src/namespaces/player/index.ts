@@ -4,10 +4,11 @@ import { authorizedPlayer } from './authorizedPlayer'
 import { guestSchema, RTCSecretKeyForHost, RTCSecretKeyForPlayer, userSchema } from '@/zod/schema'
 import { io } from '@/io'
 import { emitIO } from '@/src/utils'
-import { z } from 'zod'
 import type { User } from 'lucia'
 import type { Socket } from 'socket.io'
+import { z } from 'zod'
 import { createId } from '@paralleldrive/cuid2'
+import { redisDb } from '@/src/db/redis'
 
 export const playerIO = io.of(`/p`)
 
@@ -19,17 +20,28 @@ type ReadySocket = OverrideProps<Socket, {
   }
 }>
 
-const playerLeftSchema = z.string().cuid2()
+const playerLeftSchema = z.object({
+  uniqueSocketID: z.string(),
+  clientID: z.string().cuid2()
+})
 
-const playerJoinedSchema = z.union([userSchema, guestSchema])
+const playerJoinedSchema = z.object({
+  uniqueSocketID: z.string(),
+  clientInfo: z.union([userSchema, guestSchema])
+})
 
 
-const ready = (s: ReadySocket, roomID: string, clientID: string, clientInfo: Guest | User) => {
-  console.log('clientID: ', clientID)
+const ready = async (s: ReadySocket, roomID: string, clientID: string, clientInfo: Guest | User) => {
+  await redisDb.incr(`user:${clientID}:unique_socket_id_count`)
+  const uniqueSocketID = (await redisDb.get(`user:${clientID}:unique_socket_id_count`))!
+
   s.on('disconnect', async () => {
     emitIO()
       .output(playerLeftSchema)
-      .emit(io.of('/h').to(roomID), 'player-left', clientID)
+      .emit(io.of('/h').to(roomID), 'player-left', {
+        uniqueSocketID,
+        clientID
+      })
   })
 
   const secretKeyForWebRTC = createId()
@@ -45,7 +57,7 @@ const ready = (s: ReadySocket, roomID: string, clientID: string, clientInfo: Gue
 
   emitIO()
     .output(playerJoinedSchema)
-    .emit(io.of('/h').to(s.data.roomID), 'player-joined', clientInfo)
+    .emit(io.of('/h').to(s.data.roomID), 'player-joined', { clientInfo, uniqueSocketID })
 }
 
 export const player = () => {
