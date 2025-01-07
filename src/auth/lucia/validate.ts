@@ -1,10 +1,10 @@
 import { lucia } from '@/lucia'
 import { getCookies } from '@/helpers'
-import type { SocketAll } from '@/types'
+import type { AllSocketTypes } from '@/types'
 import type { Session, User } from 'lucia'
 
 export const validateUser = async (
-  socket: SocketAll,
+  socket: AllSocketTypes,
 ): Promise<{ user: User; session: Session } | null> => {
   const cookies = getCookies(socket)
   if (!cookies) return null
@@ -13,7 +13,6 @@ export const validateUser = async (
   if (!sessionId) return null
 
   const authInfo = await lucia.validateSession(sessionId!)
-  console.log('authInfo: ', authInfo)
   if (!authInfo) return null
 
   const user = authInfo.user
