@@ -1,5 +1,5 @@
 import { validateAdmin } from '@/src/auth/admin'
-import { clearThemes, onConnection, prepareRestart, setLastVersion, setThemes, versionChanged } from '@/helpers'
+import { onConnection, prepareRestart, setLastVersion, versionChanged } from '@/helpers'
 import { io } from '@/src/io'
 import { flushAllExceptStartsWith } from '@/utils'
 import { redisDb } from '@/src/db/redis'
@@ -17,9 +17,8 @@ export const admin = () => {
         s.on('version-changed', versionChanged)
         s.on('set-last-version', setLastVersion)
         s.on('prepare-restart', prepareRestart)
-        s.on('set-themes', setThemes)
-        s.on('clear-themes', clearThemes)
-        s.on('flushall-except-essential', () => flushAllExceptStartsWith(['user:', 'guest:', 'room_themes:']))
+        s.on('flushall-except-users', () => flushAllExceptStartsWith(['user:', 'guest:']))
         s.on('flushall', () => redisDb.flushall())
     })
+
 }
