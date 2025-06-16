@@ -1,11 +1,9 @@
-Socketio server for pixgu
-
 Requirements:
 
 - Node.js 20.x
 - Bun
 
-## Setup
+## Running server in locally
 
 1. Clone the repository
 2. Install dependencies with `bun install`
