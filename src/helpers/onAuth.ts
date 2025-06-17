@@ -7,7 +7,6 @@ import type {
   OverrideProps,
 } from '@/types'
 import { emitIO } from '@/utils'
-import { validateUser } from '@/lucia'
 import type { Socket } from 'socket.io'
 import { validateGuest } from '../auth/guest'
 import { z } from 'zod'
@@ -32,13 +31,10 @@ import { z } from 'zod'
  *
  * `In this example, if user is logged in, the "logged" callbacks will be called.`
  */
-export const onAuth = <SocketT extends Omit<Socket, 'data'>>(s: OverrideProps<SocketT, {
-  data: any
-}>, cbs: Cbs) => {
-
+export const onAuth = (s: Socket, cbs: Cbs) => {
   const auth = async () => {
     console.log('Authenticating user...', {
-      handshake: s.handshake
+      handshake: s.handshake,
     })
     let isLogged = false
     let isGuest = false
@@ -46,27 +42,29 @@ export const onAuth = <SocketT extends Omit<Socket, 'data'>>(s: OverrideProps<So
 
     if (cbs.logged) {
       console.log('validating is logged')
-      const logged = await validateUser(s)
+      // const logged = await validateUser(s)
 
-      if (logged) {
-        const { user, session } = logged
-        isLogged = true
-        s.data.isLogged = true
-        s.data.isGuest = false
-        s.data.userID = user.id
-        s.data.user = user
-        s.data.session = session
-        s.join(user.id)
-        cbs.logged.beforeRes?.(s)
-        cbs.default?.beforeRes?.(s)
-        emitIO().output(z.any()).emit(s, 'auth', {
-          isSuccess: true,
-          as: 'logged',
-        })
-        cbs.logged.afterRes?.(s)
-        cbs.default?.afterRes?.(s)
-        return
-      } else failed.push('logged')
+      // if (logged) {
+      //   const { user, session } = logged
+      //   isLogged = true
+      //   s.data.isLogged = true
+      //   s.data.isGuest = false
+      //   s.data.userID = user.id
+      //   s.data.user = user
+      //   s.data.session = session
+      //   s.join(user.id)
+      //   cbs.logged.beforeRes?.(s)
+      //   cbs.default?.beforeRes?.(s)
+      //   emitIO().output(z.any()).emit(s, 'auth', {
+      //     isSuccess: true,
+      //     as: 'logged',
+      //   })
+      //   cbs.logged.afterRes?.(s)
+      //   cbs.default?.afterRes?.(s)
+      //   return
+      // }
+      // else
+      failed.push('logged')
     }
 
     if (cbs.guest) {
@@ -124,10 +122,12 @@ export const onAuth = <SocketT extends Omit<Socket, 'data'>>(s: OverrideProps<So
         return
       }
 
-      const user = await validateUser(s)
       const guest = await validateGuest(s)
 
-      if (!user && !guest) {
+      if (
+        // !user  &&
+        !guest
+      ) {
         s.data.isLogged = false
         s.data.isGuest = true
         cbs.notJoined.beforeRes?.(s)
@@ -152,12 +152,15 @@ export const onAuth = <SocketT extends Omit<Socket, 'data'>>(s: OverrideProps<So
   s.once('auth', auth)
 }
 
-type ReturnedSocket<WithT> = OverrideProps<Socket, {
-  data: WithT & {
-    isPlayer: boolean
-    roomID: string
+type ReturnedSocket<WithT> = OverrideProps<
+  Socket,
+  {
+    data: WithT & {
+      isPlayer: boolean
+      roomID: string
+    }
   }
-}>
+>
 
 type Cbs = {
   logged?: AtLeastOne<{

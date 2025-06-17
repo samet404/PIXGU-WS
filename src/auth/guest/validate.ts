@@ -1,15 +1,14 @@
 import { redisDb } from '@/src/db/redis'
 import { getCookies } from '@/helpers'
-import type { SocketAll } from '@/types'
+import type { Socket } from 'socket.io'
 import { killGuest } from './kill'
 import { z } from 'zod'
 
-export const validateGuest = async (s: SocketAll) => {
+export const validateGuest = async (s: Socket) => {
   try {
     const cookies = getCookies(s)
     console.log('cookies: ', cookies)
     if (!cookies) return
-
 
     const authSession = cookies['guest_auth_session']
     console.log('authSession: ', authSession)
@@ -40,5 +39,5 @@ export const validateGuest = async (s: SocketAll) => {
     }
 
     return guest
-  } catch (error) { }
+  } catch (error) {}
 }
