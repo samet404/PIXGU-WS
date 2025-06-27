@@ -1,4 +1,3 @@
-import { crIO, hostIO, playerIO } from '../namespaces'
 import { redisDb } from '../db/redis'
 import { storeConnectionsAllowed } from '../store'
 import {
@@ -8,6 +7,9 @@ import {
     REDIS_ROOM_OTHERS_KEYS,
     VERSION
 } from '../constants'
+import { playerIO } from 'namespaces/player'
+import { hostIO } from 'namespaces/host'
+import { crIO } from 'namespaces/cr'
 
 export const prepareRestart = async () => {
     try {

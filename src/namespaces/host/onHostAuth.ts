@@ -1,17 +1,13 @@
 import { redisDb } from '@/redis'
 import { io } from '@/io'
-import { emitIO, logErr } from '@/utils'
-import type {
-  AllSocketData,
-  AtLeastOne,
-  HostSocket,
-  IsJoinedSocketData,
-  JoinedSocket,
-} from '@/types'
-import { getRoomID, killRoom } from '@/helpers'
+import type { AtLeastOne } from '@/types'
 import { z } from 'zod'
+import { VERSION } from '@/constants'
+import { getRoomID } from 'helpers/getRoomID'
+import { emitIO } from 'utils/emitIO'
+import { killRoom } from 'helpers/killRoom'
+import { logErr } from 'utils/logErr'
 import type { Socket } from 'socket.io'
-import { VERSION } from '@/src/constants'
 
 
 const hostAuthSchema = z.union([
@@ -25,11 +21,11 @@ const hostAuthSchema = z.union([
 ])
 
 
-export const onHostAuth = async <T extends AllSocketData>(
-  s: IsJoinedSocketData<T> extends never ? never : JoinedSocket,
+export const onHostAuth = async (
+  s: Socket,
   cbs?: AtLeastOne<{
-    beforeRes: (s: HostSocket<T>) => void
-    afterRes: (s: HostSocket<T>) => void
+    beforeRes: (s: Socket) => void
+    afterRes: (s: Socket) => void
   }>,
 ) =>
   s.once('host-auth', async () => {
@@ -86,7 +82,7 @@ export const onHostAuth = async <T extends AllSocketData>(
     }
 
     await redisDb.incr(`room:${roomID}:total_connections`)
-    s.emit('host-joined', s.data.isLogged ? s.data.user : s.data.guest)
+    s.emit('host-joined', s.data.guest)
 
     s.on('disconnect', async () => {
       console.log('host disconnected', roomID)
@@ -104,10 +100,10 @@ export const onHostAuth = async <T extends AllSocketData>(
     await redisDb.set(`room:${roomID}:game_started`, '0')
     if (!hasPass) await redisDb.sadd('active_public_rooms', roomID)
 
-    cbs?.beforeRes?.(s as unknown as HostSocket<T>)
+    cbs?.beforeRes?.(s)
     emitIO().output(hostAuthSchema).emit(s, 'host-auth', {
       isSuccess: true,
     })
-    cbs?.afterRes?.(s as unknown as HostSocket<T>)
+    cbs?.afterRes?.(s)
   })
 

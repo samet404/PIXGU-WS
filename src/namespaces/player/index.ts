@@ -1,24 +1,20 @@
-import type { Guest, GuestSocketData, LoggedSocketData, OverrideProps } from '@/types'
-import { getRoomID, onAuth, onConnection } from '@/helpers'
 import { authorizedPlayer } from './authorizedPlayer'
-import { guestSchema, RTCSecretKeyForHost, RTCSecretKeyForPlayer, userSchema } from '@/zod/schema'
 import { io } from '@/io'
-import { emitIO } from '@/src/utils'
-import type { User } from 'lucia'
 import type { Socket } from 'socket.io'
 import { z } from 'zod'
 import { createId } from '@paralleldrive/cuid2'
-import { redisDb } from '@/src/db/redis'
+import { emitIO } from 'utils/emitIO'
+import { redisDb } from '@/db/redis'
+import type { Guest } from 'types/guest'
+import { onConnection } from 'helpers/onConnection'
+import { onAuth } from 'helpers/onAuth'
+import { getRoomID } from 'helpers/getRoomID'
+import { RTCSecretKeyForPlayer } from '@/zod/schema/RTCSecretKeyForPlayer'
+import { RTCSecretKeyForHost } from '@/zod/schema/RTCSecretKeyForHost'
+import { guestSchema } from '@/zod/schema/guest'
+import { userSchema } from '@/zod/schema/user'
 
 export const playerIO = io.of(`/p`)
-
-type ContainsOneOfThese = LoggedSocketData | GuestSocketData
-type ReadySocket = OverrideProps<Socket, {
-  data: ContainsOneOfThese & {
-    isPlayer: boolean
-    roomID: string
-  }
-}>
 
 const playerLeftSchema = z.object({
   uniqueSocketID: z.string(),
@@ -31,7 +27,7 @@ const playerJoinedSchema = z.object({
 })
 
 
-const ready = async (s: ReadySocket, roomID: string, clientID: string, clientInfo: Guest | User) => {
+const ready = async (s: Socket, roomID: string, clientID: string, clientInfo: Guest) => {
   await redisDb.incr(`user:${clientID}:unique_socket_id_count`)
   const uniqueSocketID = (await redisDb.get(`user:${clientID}:unique_socket_id_count`))!
 

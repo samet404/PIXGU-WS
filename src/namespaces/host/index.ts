@@ -2,16 +2,18 @@ import type {
   AllSocketData,
   Guest,
   HostSocket,
-  IsSocket,
-  JoinedSocket,
 } from '@/types'
-import { getRoomID, onAuth, onConnection } from '@/helpers'
 import { io } from '@/io'
-import { onHostAuth } from './funcs'
-import { emitIO, onIO } from '@/utils'
+import { onHostAuth } from './onHostAuth'
 import { z } from 'zod'
-import { guestSchema, userSchema } from '@/zod/schema'
 import { redisDb } from '@/db/redis'
+import { emitIO } from 'utils/emitIO'
+import { onIO } from 'utils/onIO'
+import { onConnection } from 'helpers/onConnection'
+import { onAuth } from 'helpers/onAuth'
+import { getRoomID } from 'helpers/getRoomID'
+import { userSchema } from '@/zod/schema/user'
+import { guestSchema } from '@/zod/schema/guest'
 
 export const hostIO = io.of(`/h`)
 
@@ -101,7 +103,7 @@ const defaultListeners = <SData extends AllSocketData>(
   onIO()
     .input(
       z.object({
-        //zodSimplePeerSignal
+        // TODO: replace with zodSimplePeerSignal
         signal: z.any(),
         userID: z.string(),
       }),
@@ -139,13 +141,13 @@ export const host = () => {
     onAuth(s, {
       logged: {
         beforeRes: (s) => {
-          onHostAuth(s, {
-            beforeRes: (s) => {
-              const roomID = getRoomID(s)
-              s.once('ready', () => ready(s, roomID))
-              defaultListeners(s, roomID)
-            },
-          })
+          // onHostAuth(s, {
+          //   beforeRes: (s) => {
+          //     const roomID = getRoomID(s)
+          //     s.once('ready', () => ready(s, roomID))
+          //     defaultListeners(s, roomID)
+          //   },
+          // })
         },
       },
       guest: {

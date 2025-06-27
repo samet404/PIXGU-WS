@@ -1,8 +1,11 @@
-import { validateAdmin } from '@/src/auth/admin'
-import { onConnection, prepareRestart, setLastVersion, versionChanged } from '@/helpers'
-import { io } from '@/src/io'
-import { flushAllExceptStartsWith } from '@/utils'
-import { redisDb } from '@/src/db/redis'
+import { redisDb } from '@/db/redis'
+import { io } from '@/io*'
+import { validateAdmin } from 'auth/admin/validate'
+import { onConnection } from 'helpers/onConnection'
+import { prepareRestart } from 'helpers/prepareRestart'
+import { setLastVersion } from 'helpers/setLastVersion'
+import { versionChanged } from 'helpers/versionChanged'
+import { flushAllExceptStartsWith } from 'utils/flushAllExceptStartsWith'
 
 export const adminIO = io.of(`/admin`)
 

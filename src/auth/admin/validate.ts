@@ -1,15 +1,16 @@
-import type { AllSocketTypes } from '@/src/types'
+import { env } from '@/env'
+import type { Socket } from 'socket.io'
 import { z } from 'zod'
 
-export const validateAdmin = (s: AllSocketTypes) => {
+export const validateAdmin = (s: Socket) => {
     try {
         console.log('admin validating...')
 
         const authToken = s.handshake.auth.token
         if (!authToken) throw new Error('No authToken')
 
-        z.string().length(40).cuid2().parse(authToken)
-        if (authToken !== 'k3wzeu2cfwvp3r1ojjmwy17e6fme8l8cc9t059fe') throw new Error('l6e7d60a4ejsg1hebzbmsw32ex1tk1b9gk55x9l5')
+        z.string().min(40).parse(authToken)
+        if (authToken !== env.AUTH_SECRET) throw new Error('Auth token is invalid when validating admin')
 
         console.log('admin validated successfully!')
         s.emit('auth', {

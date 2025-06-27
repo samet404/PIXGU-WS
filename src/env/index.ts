@@ -11,6 +11,7 @@ export const env = createEnv({
     REDIS_PORT: z.string().optional(),
     REDIS_PASSWORD: z.string(),
     DEV_IP_ADDRESS: z.string().default('168.63.129.16'),
+    AUTH_SECRET: z.string(),
   },
   runtimeEnv: process.env,
 })

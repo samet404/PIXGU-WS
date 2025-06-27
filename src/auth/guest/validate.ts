@@ -1,8 +1,8 @@
-import { redisDb } from '@/src/db/redis'
-import { getCookies } from '@/helpers'
 import type { Socket } from 'socket.io'
 import { killGuest } from './kill'
 import { z } from 'zod'
+import { getCookies } from 'helpers/getCookies'
+import { redisDb } from '@/db/redis'
 
 export const validateGuest = async (s: Socket) => {
   try {
@@ -39,5 +39,5 @@ export const validateGuest = async (s: Socket) => {
     }
 
     return guest
-  } catch (error) {}
+  } catch (error) { }
 }

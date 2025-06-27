@@ -1,27 +1,24 @@
 {
   "compilerOptions": {
-    // Enable latest features
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "ESNext",
     "moduleDetection": "force",
     "allowJs": true,
-    "baseUrl": ".",
-
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["./*"],
-      "@/zod/*": ["src/libs/zod/*"],
-      "@/env": ["src/env/index.ts"],
-      "@/helpers": ["src/helpers/index.ts"],
-      "@/store": ["src/store/index.ts"],
-      "@/geoIP": ["src/db/geoIP/index.ts"],
-      "@/db/*": ["src/db/*"],
-      "@/io*": ["src/io.ts"],
-      "@/utils": ["src/utils/index.ts"],
-      "@/types": ["src/types"],
-      "@/middleware": ["src/middleware/index.ts"],
-      "@/redis": ["src/db/redis/index.ts"],
-      "@/constants": ["src/constants/index.ts"]
+      "@/zod/*": ["./libs/zod/*"],
+      "@/env": ["./env/index.ts"],
+      "@/helpers": ["./helpers/index.ts"],
+      "@/store": ["./store/index.ts"],
+      "@/geoIP": ["./db/geoIP/index.ts"],
+      "@/db/*": ["./db/*"],
+      "@/io*": ["./io.ts"],
+      "@/utils": ["./utils/index.ts"],
+      "@/types": ["./types"],
+      "@/middleware": ["./middleware/index.ts"],
+      "@/redis": ["./db/redis/index.ts"],
+      "@/constants": ["./constants/index.ts"]
     },
     // Bundler mode
     "moduleResolution": "bundler",

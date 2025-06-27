@@ -1,5 +1,5 @@
-import { emitIO } from '@/utils'
-import type { SocketAll } from '@/types'
+import type { Socket } from 'socket.io'
+import { emitIO } from 'utils/emitIO'
 import { z } from 'zod'
 
 const errSchema = z.union([
@@ -8,5 +8,5 @@ const errSchema = z.union([
   z.literal('INTERNAL_SERVER_ERROR'),
 ])
 
-export const emitErr = (s: SocketAll, err: z.infer<typeof errSchema>) =>
+export const emitErr = (s: Socket, err: z.infer<typeof errSchema>) =>
   emitIO().output(errSchema).emit(s, 'cr-error', err)

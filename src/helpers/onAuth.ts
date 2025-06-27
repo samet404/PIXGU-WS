@@ -1,15 +1,10 @@
 import type {
-  AllSocketData,
   AtLeastOne,
-  GuestSocketData,
-  LoggedSocketData,
-  NotLoggedSocketData,
-  OverrideProps,
 } from '@/types'
-import { emitIO } from '@/utils'
 import type { Socket } from 'socket.io'
-import { validateGuest } from '../auth/guest'
 import { z } from 'zod'
+import { emitIO } from 'utils/emitIO'
+import { validateGuest } from 'auth/guest/validate'
 
 /**
  * Authenticates a socket
@@ -152,33 +147,23 @@ export const onAuth = (s: Socket, cbs: Cbs) => {
   s.once('auth', auth)
 }
 
-type ReturnedSocket<WithT> = OverrideProps<
-  Socket,
-  {
-    data: WithT & {
-      isPlayer: boolean
-      roomID: string
-    }
-  }
->
-
 type Cbs = {
   logged?: AtLeastOne<{
-    beforeRes: (s: ReturnedSocket<LoggedSocketData>) => void
-    afterRes: (s: ReturnedSocket<LoggedSocketData>) => void
+    beforeRes: (s: Socket) => void
+    afterRes: (s: Socket) => void
   }>
 
   notJoined?: AtLeastOne<{
-    beforeRes: (s: ReturnedSocket<NotLoggedSocketData>) => void
-    afterRes: (s: ReturnedSocket<NotLoggedSocketData>) => void
+    beforeRes: (s: Socket) => void
+    afterRes: (s: Socket) => void
   }>
 
   guest?: AtLeastOne<{
-    beforeRes: (s: ReturnedSocket<GuestSocketData>) => void
-    afterRes: (s: ReturnedSocket<GuestSocketData>) => void
+    beforeRes: (s: Socket) => void
+    afterRes: (s: Socket) => void
   }>
   default?: AtLeastOne<{
-    beforeRes: (s: ReturnedSocket<AllSocketData>) => void
-    afterRes: (s: ReturnedSocket<AllSocketData>) => void
+    beforeRes: (s: Socket) => void
+    afterRes: (s: Socket) => void
   }>
 }

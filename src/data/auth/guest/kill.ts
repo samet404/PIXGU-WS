@@ -1,10 +1,10 @@
+import { REDIS_ROOM_KEYS_BY_ROOM_ID, REDIS_ROOM_KEYS_BY_USER_ID, REDIS_ROOM_OTHERS_KEYS } from '@/constants'
 import { redisDb } from '@/db/redis'
-import { getCookies } from '@/helpers'
-import { REDIS_ROOM_KEYS_BY_ROOM_ID, REDIS_ROOM_KEYS_BY_USER_ID, REDIS_ROOM_OTHERS_KEYS } from '@/src/constants'
-import type { SocketAll } from '@/types'
+import { getCookies } from 'helpers/getCookies'
+import type { Socket } from 'socket.io'
 import { z } from 'zod'
 
-export const killGuest = async (s: SocketAll) => {
+export const killGuest = async (s: Socket) => {
   const cookies = getCookies(s)
   if (!cookies) return
 

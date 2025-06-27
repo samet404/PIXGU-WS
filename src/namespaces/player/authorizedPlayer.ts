@@ -1,20 +1,13 @@
-import { emitIO, onIO } from '@/utils'
 import { isPlayer } from './isPlayer'
-import { zClientID, zodSimplePeerSignal } from '@/zod/schema'
 import { z } from 'zod'
 import { hostIO } from '../host'
-import type { Contains, GuestSocketData, LoggedSocketData, OverrideProps } from '@/types'
 import type { Socket } from 'socket.io'
+import { onIO } from 'utils/onIO'
+import { emitIO } from 'utils/emitIO'
+import { zClientID } from '@/zod/schema/clientID'
+import { zodSimplePeerSignal } from '@/zod/schema/zodSimplePeerSignal'
 
-type ContainsOneOfThese = LoggedSocketData | GuestSocketData
-type ReturnedSocket = OverrideProps<Socket, {
-  data: ContainsOneOfThese & {
-    isPlayer: boolean
-    roomID: string
-  }
-}>
-
-export const authorizedPlayer = <T>(s: Contains<ContainsOneOfThese, T> extends never ? never : ReturnedSocket) =>
+export const authorizedPlayer = (s: Socket) =>
   isPlayer(s, (s) => {
     console.log('player is ready')
     const clientID = s.data.isLogged ? s.data.userID : s.data.guestID

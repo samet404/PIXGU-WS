@@ -1,8 +1,8 @@
-import { emitIO } from '../utils'
 import { io } from '../io'
 import { REDIS_ROOM_KEYS_BY_ROOM_ID, REDIS_ROOM_KEYS_BY_USER_ID, REDIS_ROOM_OTHERS_KEYS } from '../constants'
 import { redisDb } from '../db/redis'
 import { z } from 'zod'
+import { emitIO } from 'utils/emitIO'
 
 export const killRoom = async (
   roomID: string,

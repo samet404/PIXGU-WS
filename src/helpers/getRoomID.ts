@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { ROOM_ID_LENGTH } from '../constants'
-import type { AllSocketTypes, IsSocket } from '../types'
+import type { Socket } from 'socket.io'
 
-export const getRoomID = <T extends AllSocketTypes>(s: IsSocket<T> extends never ? never : T) => {
+export const getRoomID = (s: Socket) => {
   const roomID: string = s.handshake.auth.roomID
 
   try {

@@ -1,27 +1,21 @@
 import { z } from 'zod'
-import { emitIO, logErr, onIO } from '@/utils'
 import { redisDb } from '@/redis'
 import { lookupCity } from '@/geoIP'
-import { emitErr, createRoomID } from './funcs'
 import { env } from '@/env'
 import { io } from '@/io'
 import { REDIS_ROOM_KEYS_BY_ROOM_ID, REDIS_ROOM_KEYS_BY_USER_ID, REDIS_ROOM_OTHERS_KEYS, VERSION } from '@/constants'
-import type { GuestSocketData, LoggedSocketData, OverrideProps } from '@/types'
-import type { Socket } from 'socket.io'
 import { crIO } from '..'
-
-type ContainsOneOfThese = LoggedSocketData | GuestSocketData
-type RequiredSocket = OverrideProps<Socket, {
-  data: ContainsOneOfThese & {
-    isPlayer: boolean
-    roomID: string
-  }
-}>
+import { onIO } from 'utils/onIO'
+import type { Socket } from 'socket.io'
+import { logErr } from 'utils/logErr'
+import { emitIO } from 'utils/emitIO'
+import { emitErr } from './emitErr'
+import { createRoomID } from './createRoomID'
 
 /**
  * Creates a room
  */
-export const onCreateRoom = (s: RequiredSocket) =>
+export const onCreateRoom = (s: Socket) =>
   onIO()
     .input(
       z.object({

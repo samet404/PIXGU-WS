@@ -1,26 +1,11 @@
 import { MAX_PLAYERS_PER_ROOM, VERSION } from '@/constants'
-import { getRoomID } from '@/helpers'
-import { emitIO } from '@/src/utils'
 import { redisDb } from '@/redis'
-import { env } from '@/src/env'
 import { z } from 'zod'
 import chalk from 'chalk'
-import type {
-  Contains,
-  GuestSocketData,
-  LoggedSocketData,
-  OverrideProps,
-} from '@/types'
 import { Socket } from 'socket.io'
-
-type ContainsOneOfThese = LoggedSocketData | GuestSocketData
-type ReturnedSocket = OverrideProps<Socket, {
-  data: ContainsOneOfThese & {
-    isPlayer: boolean
-    roomID: string
-  }
-}>
-
+import { getRoomID } from 'helpers/getRoomID'
+import { emitIO } from 'utils/emitIO'
+import { env } from '@/env'
 
 const playerAuthSchema = z.union([
   z.object({
@@ -39,8 +24,8 @@ const playerAuthSchema = z.union([
 const errLog = (a: any) => console.log(chalk.redBright(a))
 
 export const isPlayer = async <T>(
-  s: Contains<ContainsOneOfThese, T> extends never ? never : ReturnedSocket,
-  cb: (s: ReturnedSocket) => void,
+  s: Socket,
+  cb: (s: Socket) => void,
 ) => {
   const roomID = getRoomID(s)
   const roomVersion = await redisDb.get(`room:${roomID}:version`)

@@ -1,3 +1,4 @@
+import { playerIO } from 'namespaces/player'
 import {
     REDIS_ROOM_KEYS_BY_ROOM_ID,
     REDIS_ROOM_KEYS_BY_USER_ID,
@@ -5,8 +6,9 @@ import {
     REDIS_ROOM_OTHERS_KEYS,
     VERSION
 } from '../constants'
-import { crIO, hostIO, playerIO } from '../namespaces'
 import { redisDb } from '../db/redis'
+import { hostIO } from 'namespaces/host'
+import { crIO } from 'namespaces/cr'
 
 export const versionChanged = async () => {
     try {

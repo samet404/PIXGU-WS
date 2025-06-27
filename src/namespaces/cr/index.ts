@@ -1,7 +1,8 @@
 import { io } from '@/io'
-import { onAuth, onConnection } from '@/helpers'
 import { onCreateRoom } from './onCreateRoom'
 import { onKill } from './onKill'
+import { onConnection } from 'helpers/onConnection'
+import { onAuth } from 'helpers/onAuth'
 
 export const crIO = io.of('/cr')
 
